@@ -1,17 +1,27 @@
 # Python bytecode
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Virtual environments
+myenv/
 env/
 venv/
 .venv/
 
-# IDE files
+# IDE and Project files
 .vscode/
 .idea/
+.DS_Store
 
-# Simulation logs & heavy data
+# Simulation logs, models, and heavy data
 logs/
-check_points/
+log/
+*check_points/
+*checkpoints/
 *.mp4
+*.avi
+*.npy
+*.npz
+*.csv
