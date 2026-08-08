@@ -10,22 +10,40 @@ from scipy.special import j1
 C_0 = 343.0            # Speed of sound in air (m/s)
 RHO_0 = 1.225          # Density of air (kg/m^3)
 
-# Particle (e.g., Expanded Polystyrene / EPS Foam)
-C_1 = 1200.0           # Speed of sound in EPS (m/s)
-RHO_1 = 40.0           # Density of EPS (kg/m^3)
-PARTICLE_RADIUS = 0.02 # Radius of the ball in meters
+# # Particle (e.g., Expanded Polystyrene / EPS Foam)
+# C_1 = 1200.0           # Speed of sound in EPS (m/s)
+# RHO_1 = 40.0           # Density of EPS (kg/m^3)
+
+# Particle (in the AIR)
+C_1 = 343.0           # Speed of sound in air (m/s)
+RHO_1 = 1.225           # Density of air (kg/m^3)
+
+
+# --- UPDATED PARTICLE & FREQUENCY SETTINGS ---
+# Diameter is 0.10, so radius is 0.05
+PARTICLE_RADIUS = 0.05 
 PARTICLE_VOL = (4/3) * np.pi * (PARTICLE_RADIUS**3)
 
-# Transducer Array (40 kHz ultrasonic)
-FREQ = 40000.0         # Frequency (Hz)
+# Constraint: Diameter (0.05) = Wavelength / 2
+# Therefore, Target Wavelength = 0.1 meters
+TARGET_WAVELENGTH = 0.1 
+
+# Calculate Frequency to satisfy the wavelength constraint: f = c / lambda
+FREQ = C_0 / TARGET_WAVELENGTH  # Evaluates to 3430.0 Hz
 OMEGA = 2 * np.pi * FREQ
-WAVENUMBER = OMEGA / C_0 # k = 2*pi / lambda
+WAVENUMBER = OMEGA / C_0        # k = 2*pi / lambda
+# ---------------------------------------------
+
 TRANSDUCER_RADIUS = 0.005 # 'a' in the directivity formula (5mm)
 P0_A = 5.0             # Combined constant for (P_0 * A) Output efficiency & amplitude
 
 # Pre-calculate Gor'kov Constants (Equations 6 and 7)
 K1 = 0.25 * PARTICLE_VOL * ((1 / (C_0**2 * RHO_0)) - (1 / (C_1**2 * RHO_1)))
 K2 = 0.75 * PARTICLE_VOL * ((RHO_0 - RHO_1) / (OMEGA**2 * RHO_0 * (RHO_0 + 2 * RHO_1)))
+
+# coeffiction check
+print(f"K1 Coefficient: {K1:.6e}")
+print(f"K2 Coefficient: {K2:.6e}")
 
 # ==========================================
 # 2. PHYSICS FUNCTIONS
