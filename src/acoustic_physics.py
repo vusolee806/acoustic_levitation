@@ -10,13 +10,13 @@ from scipy.special import j1
 C_0 = 343.0            # Speed of sound in air (m/s)
 RHO_0 = 1.225          # Density of air (kg/m^3)
 
-# # Particle (e.g., Expanded Polystyrene / EPS Foam)
-# C_1 = 1200.0           # Speed of sound in EPS (m/s)
-# RHO_1 = 40.0           # Density of EPS (kg/m^3)
+# Particle (e.g., Expanded Polystyrene / EPS Foam)
+C_1 = 1200.0           # Speed of sound in EPS (m/s)
+RHO_1 = 40.0           # Density of EPS (kg/m^3)
 
-# Particle (in the AIR)
-C_1 = 343.0           # Speed of sound in air (m/s)
-RHO_1 = 1.225           # Density of air (kg/m^3)
+# # Particle (in the AIR)
+# C_1 = 343.0           # Speed of sound in air (m/s)
+# RHO_1 = 1.225           # Density of air (kg/m^3)
 
 
 # --- UPDATED PARTICLE & FREQUENCY SETTINGS ---
@@ -24,12 +24,11 @@ RHO_1 = 1.225           # Density of air (kg/m^3)
 PARTICLE_RADIUS = 0.05 
 PARTICLE_VOL = (4/3) * np.pi * (PARTICLE_RADIUS**3)
 
-# Constraint: Diameter (0.05) = Wavelength / 2
-# Therefore, Target Wavelength = 0.1 meters
-TARGET_WAVELENGTH = 0.1 
+#choose wavelength such that can get the frequency of 40KHZ
+TARGET_WAVELENGTH = 0.008575
 
 # Calculate Frequency to satisfy the wavelength constraint: f = c / lambda
-FREQ = C_0 / TARGET_WAVELENGTH  # Evaluates to 3430.0 Hz
+FREQ = C_0 / TARGET_WAVELENGTH  # Evaluates to 40 kHz
 OMEGA = 2 * np.pi * FREQ
 WAVENUMBER = OMEGA / C_0        # k = 2*pi / lambda
 # ---------------------------------------------
@@ -61,7 +60,7 @@ def calculate_complex_pressure(point, trans_pos, trans_zaxis, phases):
     
     # Avoid division by zero if point overlaps transducer exactly
     d = np.where(d < 1e-5, 1e-5, d)
-    
+#     d = np.clip(d, TRANSDUCER_RADIUS, None)
     # Direction vector to point
     dir_to_point = vec_to_point / d[:, np.newaxis]
     

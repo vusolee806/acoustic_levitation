@@ -404,11 +404,11 @@
         </body>
 
 
-        <body name="test_ball" pos="0 0 1.0">
+        <body name="test_ball" pos="0 0 0.2">
             <!-- freejoint makes it dynamic so it falls under gravity -->
             <freejoint/>
-            <!-- size is the radius in meters (2cm), mass is in kg (1 gram) -->
-            <geom type="sphere" size="0.05" mass="0.005" rgba="1 0.8 0 1"/>
+            <!-- size is the radius in meters (5cm)(scaling up), mass is in kg (1 gram) -->
+            <geom type="sphere" size="0.05" mass="0.001" rgba="1 0.8 0 1"/>
         </body>
 
     </worldbody>
