@@ -11,7 +11,7 @@ sys.path.append(PROJECT_ROOT)
 from src.acoustic_physics import calculate_arf 
 
 def main():
-    xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_array.xml")
+    xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_levitator.xml")
     
     try:
         model = mujoco.MjModel.from_xml_path(xml_path)

@@ -21,7 +21,7 @@ RHO_1 = 40.0           # Density of EPS (kg/m^3)
 
 # --- UPDATED PARTICLE & FREQUENCY SETTINGS ---
 # Diameter is 0.10, so radius is 0.05
-PARTICLE_RADIUS = 0.05 
+PARTICLE_RADIUS = 0.005 
 #with object is the ball
 PARTICLE_VOL = (4/3) * np.pi * (PARTICLE_RADIUS**3)
 
@@ -35,7 +35,7 @@ WAVENUMBER = OMEGA / C_0        # k = 2*pi / lambda
 # ---------------------------------------------
 
 TRANSDUCER_RADIUS = 0.005 # 'a' in the directivity formula (5mm)
-P0_A = 10.0             # Combined constant for (P_0 * A) Output efficiency & amplitude
+P0_A = 5.0             # Combined constant for (P_0 * A) Output efficiency & amplitude
 
 # Pre-calculate Gor'kov Constants (Equations 6 and 7)
 K1 = 0.25 * PARTICLE_VOL * ((1 / (C_0**2 * RHO_0)) - (1 / (C_1**2 * RHO_1)))
