@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import torch
 import mujoco
 import mujoco.viewer
 import matplotlib.pyplot as plt  # Thêm thư viện vẽ đồ thị
@@ -8,7 +9,8 @@ import matplotlib.pyplot as plt  # Thêm thư viện vẽ đồ thị
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-from src.acoustic_physics import calculate_arf 
+# 1. IMPORT THE NEW WRAPPER FUNCTION
+from src.acoustic_physics_pytorch import get_physics_outputs 
 
 def main():
     xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_array.xml")
@@ -38,7 +40,12 @@ def main():
         transducer_zaxis[i] = mat.reshape(3, 3)[:, 2]
 
     ball_id = model.body("test_ball").id
-    damping_coeff = 0.0001
+
+    # 2. CONVERT TRANSDUCER ARRAYS TO PYTORCH TENSORS ONCE BEFORE THE LOOP
+    trans_pos_tensor = torch.tensor(transducer_positions, dtype=torch.float32)
+    trans_zaxis_tensor = torch.tensor(transducer_zaxis, dtype=torch.float32)
+    phases_tensor = torch.tensor(phases, dtype=torch.float32)
+
     # --- KHAI BÁO CÁC MẢNG LƯU TRỮ DỮ LIỆU ĐỒ THỊ ---
     time_log = []
     fx_log = []
@@ -53,14 +60,21 @@ def main():
             ball_pos = data.xpos[ball_id]
             ball_vel = data.cvel[ball_id][3:6] 
             
-            arf_force = calculate_arf(ball_pos, transducer_positions, transducer_zaxis, phases)
-            # arf_force = np.clip(arf_force, -1.0, 1.0)
+            # 3. RESHAPE BALL POS TO (1, 3) AND CALL THE NEW PHYSICS WRAPPER
+            ball_pos_np = ball_pos.copy().reshape(1, 3).astype(np.float32)
+            U_array, forces_array = get_physics_outputs(
+                ball_pos_np, 
+                trans_pos_tensor, 
+                trans_zaxis_tensor, 
+                phases_tensor
+            )
             
-
+            # Extract the force vector for the single ball
+            arf_force = forces_array[0]
+            arf_force = np.clip(arf_force, -1.0, 1.0)
+            
+            damping_coeff = 0.000001
             drag_force = -damping_coeff * ball_vel
-            
-            # data.xfrc_applied[ball_id] = 0.0 
-            # data.xfrc_applied[ball_id, :3] = arf_force + drag_force
             
             # 1. Find where the ball's joint degrees of freedom (X, Y, Z) start in the engine
             dof_start = model.body_dofadr[ball_id]
@@ -69,7 +83,6 @@ def main():
             # This leaves xfrc_applied completely free for your mouse interactions!
             data.qfrc_applied[dof_start : dof_start + 3] = arf_force + drag_force
             
-
             # --- LƯU DỮ LIỆU Ở MỖI BƯỚC MÔ PHỎNG ---
             time_log.append(data.time)
             fx_log.append(arf_force[0])

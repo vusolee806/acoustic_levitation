@@ -3,6 +3,14 @@
     <asset>
         <material name="sensor_mat" rgba="0.2 0.6 1 1"/>
     </asset>
+
+    <!-- Thêm khối default này -->
+    <default>
+        <!-- friction="trượt xoắn lăn" -->
+        <!-- Ví dụ: trượt=1.0, xoắn=0.005, lăn=0.01 -->
+        <geom friction="1.0 0.005 0.1"/>
+    </default>
+
     <worldbody>
         <light diffuse=".5 .5 .5" pos="0 0 10" dir="0 0 -1"/>
         <geom type="plane" size="10 10 0.1" rgba=".9 .9 .9 1" pos="0 0 -5.0"/>
@@ -403,6 +411,13 @@
             <site name="site_sensor_79" pos="0 0 0" zaxis="-0.9638 0.1325 0.2315" size="0.05" rgba="1 0 0 1"/>
         </body>
 
+        <body name="test_rice" pos="0 0 0.01">
+            <freejoint/>
+            <!-- Capsule size in MuJoCo is "radius half-length" -->
+            <!-- 1mm radius (2mm wide) and 2.5mm half-length (5mm cylinder + 2mm caps = 7mm total length) -->
+
+            <geom type="capsule" size="0.04 0.08" mass="0.0001" rgba="0.9 0.9 0.8 1"/>
+        </body>
 
         <body name="test_ball" pos="0 0 0.2">
             <!-- freejoint makes it dynamic so it falls under gravity -->
@@ -411,6 +426,7 @@
             <geom type="sphere" size="0.05" mass="0.001" rgba="1 0.8 0 1"/>
         </body>
 
+        
     </worldbody>
 
 

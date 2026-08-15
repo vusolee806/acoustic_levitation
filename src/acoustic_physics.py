@@ -22,6 +22,7 @@ RHO_1 = 40.0           # Density of EPS (kg/m^3)
 # --- UPDATED PARTICLE & FREQUENCY SETTINGS ---
 # Diameter is 0.10, so radius is 0.05
 PARTICLE_RADIUS = 0.05 
+#with object is the ball
 PARTICLE_VOL = (4/3) * np.pi * (PARTICLE_RADIUS**3)
 
 #choose wavelength such that can get the frequency of 40KHZ
@@ -34,7 +35,7 @@ WAVENUMBER = OMEGA / C_0        # k = 2*pi / lambda
 # ---------------------------------------------
 
 TRANSDUCER_RADIUS = 0.005 # 'a' in the directivity formula (5mm)
-P0_A = 5.0             # Combined constant for (P_0 * A) Output efficiency & amplitude
+P0_A = 10.0             # Combined constant for (P_0 * A) Output efficiency & amplitude
 
 # Pre-calculate Gor'kov Constants (Equations 6 and 7)
 K1 = 0.25 * PARTICLE_VOL * ((1 / (C_0**2 * RHO_0)) - (1 / (C_1**2 * RHO_1)))
@@ -132,8 +133,8 @@ def calculate_arf(point, trans_pos, trans_zaxis, phases, eps=1e-4):
     U_zp = calculate_gorkov_potential(point + dz, trans_pos, trans_zaxis, phases)
     U_zm = calculate_gorkov_potential(point - dz, trans_pos, trans_zaxis, phases)
     
-    # Equation 3: F = - Gradient(U)
-    F_x = -(U_xp - U_xm) / (2 * eps)
+    # Equation 3: F = - Gradient(U), this applies the central difference formula to calculate
+    F_x = -(U_xp - U_xm) / (2 * eps) 
     F_y = -(U_yp - U_ym) / (2 * eps)
     F_z = -(U_zp - U_zm) / (2 * eps)
     
