@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt  # Thêm thư viện vẽ đồ thị
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-# 1. IMPORT THE NEW WRAPPER FUNCTION
-from src.acoustic_physics_pytorch import get_physics_outputs 
+# 1. IMPORT THE NEW WRAPPER FUNCTION AND PHASE GENERATOR
 
+from src.acoustic_physics_pytorch import get_physics_outputs, generate_twin_trap_phases
 def main():
-    xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_array.xml")
+    xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_levitator.xml")
     
     try:
         model = mujoco.MjModel.from_xml_path(xml_path)
@@ -27,13 +27,17 @@ def main():
     transducer_positions = np.zeros((num_transducers, 3))
     transducer_zaxis = np.zeros((num_transducers, 3))
     
+    # Initialize phases with geometric split for a static twin trap at the origin
     phases = np.zeros(num_transducers)
-    phases[:num_transducers//2] = np.pi 
 
     for i in range(num_transducers):
         site_id = model.site(f"site_sensor_{i+1}").id
         transducer_positions[i] = model.site_pos[site_id]
         
+        # Apply pi-phase shift based on spatial X-coordinate
+        if transducer_positions[i][0] > 0:
+            phases[i] = np.pi
+            
         quat = model.site_quat[site_id]
         mat = np.zeros(9)
         mujoco.mju_quat2Mat(mat, quat)
@@ -60,28 +64,36 @@ def main():
             ball_pos = data.xpos[ball_id]
             ball_vel = data.cvel[ball_id][3:6] 
             
-            # 3. RESHAPE BALL POS TO (1, 3) AND CALL THE NEW PHYSICS WRAPPER
+            # --- 1. DEFINE THE TARGET FOCAL POINT ---
+            # In an RL environment, this coordinate would be the action output by your neural network.
+            # For now, let's set a static target to catch the dropping ball at Z = 0.05 meters.
+            target_focal_point = torch.tensor([[0.0, 0.0, 0.01]], dtype=torch.float32)
+            
+            # --- 2. GENERATE PHASES DYNAMICALLY ---
+            # Calculate the exact phase delays needed to steer the twin trap to the target
+            phases_tensor = generate_twin_trap_phases(target_focal_point, trans_pos_tensor)
+            
+            # --- 3. CALCULATE PHYSICS ---
+            # Reshape ball pos to (1, 3) and call the physics wrapper using the NEW phases
             ball_pos_np = ball_pos.copy().reshape(1, 3).astype(np.float32)
             U_array, forces_array = get_physics_outputs(
                 ball_pos_np, 
                 trans_pos_tensor, 
                 trans_zaxis_tensor, 
-                phases_tensor
+                phases_tensor  # <-- Using the dynamically generated phases here!
             )
             
             # Extract the force vector for the single ball
             arf_force = forces_array[0]
             arf_force = np.clip(arf_force, -1.0, 1.0)
             
-            damping_coeff = 0.000001
-            drag_force = -damping_coeff * ball_vel
+            # # Add simple drag to simulate air resistance damping
+            # damping_coeff = 0.00001
+            # drag_force = -damping_coeff * ball_vel
             
-            # 1. Find where the ball's joint degrees of freedom (X, Y, Z) start in the engine
+            # Apply the acoustic and drag forces to the internal joint (qfrc)
             dof_start = model.body_dofadr[ball_id]
-            
-            # 2. Apply the acoustic and drag forces to the internal joint (qfrc), NOT the external body (xfrc)
-            # This leaves xfrc_applied completely free for your mouse interactions!
-            data.qfrc_applied[dof_start : dof_start + 3] = arf_force + drag_force
+            data.qfrc_applied[dof_start : dof_start + 3] = arf_force #+ drag_force
             
             # --- LƯU DỮ LIỆU Ở MỖI BƯỚC MÔ PHỎNG ---
             time_log.append(data.time)

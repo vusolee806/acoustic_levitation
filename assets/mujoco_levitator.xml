@@ -1,5 +1,10 @@
 <mujoco model="Real Scale Acoustic Levitator">
     <compiler angle="degree"/>
+
+    <!-- Set standard air density (1.225) and viscosity (1.85e-5) -->
+    <!-- Lower timestep to 0.1 milliseconds for high stability -->
+    <option timestep="0.0001" density="1.225" viscosity="1.85e-5"/>
+
     <asset>
         <material name="sensor_mat" rgba="0.2 0.6 1 1"/>
     </asset>
@@ -330,7 +335,7 @@
 
         <!-- test object -->
 
-        <body name="test_rice" pos="0 0 0.01">
+        <body name="test_rice" pos="0 1 0.00">
             <freejoint/>
             <!-- Scaled down to 1mm radius, 2mm half-length -->
             <geom type="capsule" size="0.001 0.002" mass="0.0001" rgba="0.9 0.9 0.8 1"/>
@@ -339,7 +344,7 @@
         <body name="test_ball" pos="0 0 0.05">
             <freejoint/>
             <!-- Scaled down to 5mm radius 1 gram -->
-            <geom type="sphere" size="0.002" mass="0.001" rgba="1 0.8 0 1"/>
+            <geom type="sphere" size="0.005" density="40" rgba="1 0.8 0 1"/>
         </body>
     </worldbody>
 

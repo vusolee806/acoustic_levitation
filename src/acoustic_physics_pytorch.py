@@ -12,14 +12,11 @@ RHO_0 = 1.225          # Density of air (kg/m^3)
 C_1 = 1200.0           # Speed of sound in EPS (m/s)
 RHO_1 = 40.0           # Density of EPS (kg/m^3)
 
-# # Particle (in the AIR)
-# C_1 = 343.0          # Speed of sound in air (m/s)
-# RHO_1 = 1.225        # Density of air (kg/m^3)
 
 
 # --- UPDATED PARTICLE & FREQUENCY SETTINGS ---
 # Diameter is 0.10, so radius is 0.05
-PARTICLE_RADIUS = 0.05 
+PARTICLE_RADIUS = 0.002 
 PARTICLE_VOL = (4/3) * np.pi * (PARTICLE_RADIUS**3)
 
 #choose wavelength such that can get the frequency of 40KHZ
@@ -31,8 +28,8 @@ OMEGA = 2 * np.pi * FREQ
 WAVENUMBER = OMEGA / C_0        # k = 2*pi / lambda
 # ---------------------------------------------
 
-TRANSDUCER_RADIUS = 0.005 # 'a' in the directivity formula (5mm)
-P0_A = 5.0             # Combined constant for (P_0 * A) Output efficiency & amplitude
+TRANSDUCER_RADIUS = 0.01 # 'a' in the directivity formula (5mm)
+P0_A = 40.0             # Combined constant for (P_0 * A) Output efficiency & amplitude
 
 # Pre-calculate Gor'kov Constants (Equations 6 and 7)
 K1 = 0.25 * PARTICLE_VOL * ((1 / (C_0**2 * RHO_0)) - (1 / (C_1**2 * RHO_1)))
@@ -46,6 +43,28 @@ print(f"K2 Coefficient: {K2:.6e}")
 # ==========================================
 # 2. PHYSICS FUNCTIONS (Separated for Clarity)
 # ==========================================
+
+def generate_twin_trap_phases(focal_point, trans_pos):
+    """
+    Calculates the phase delays to steer the twin trap to a specific focal point.
+    Returns a PyTorch tensor of phases.
+    """
+    # 1. Calculate distance from each transducer to focal point
+    # Ensure dimensions align for broadcasting: focal_point (1, 3), trans_pos (79, 3)
+    vec_to_focus = focal_point - trans_pos
+    d = torch.linalg.norm(vec_to_focus, dim=1)
+    
+    # 2. Number of cycles (N)
+    N = d / TARGET_WAVELENGTH
+    
+    # 3. Phase delay for focusing
+    focus_phases = 2 * torch.pi * (1 - (N % 1))
+    
+    # 4. Apply Twin Trap Signature (pi-phase shift to one geometrical half)
+    twin_phases = focus_phases.clone()
+    twin_phases[trans_pos[:, 0] > 0] += torch.pi
+    
+    return twin_phases
 
 def calculate_complex_pressure(point, trans_pos, trans_zaxis, phases):
     """
@@ -127,6 +146,9 @@ def get_physics_outputs(point_numpy, trans_pos, trans_zaxis, phases):
     
     # Step 3: Safely detach both back into pure NumPy arrays for MuJoCo
     return U_tensor.detach().numpy(), F_tensor.detach().numpy()
+
+
+
 
 import matplotlib.pyplot as plt
 
