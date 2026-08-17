@@ -67,7 +67,7 @@ def main():
             # --- 1. DEFINE THE TARGET FOCAL POINT ---
             # In an RL environment, this coordinate would be the action output by your neural network.
             # For now, let's set a static target to catch the dropping ball at Z = 0.05 meters.
-            target_focal_point = torch.tensor([[0.0, 0.0, 0.01]], dtype=torch.float32)
+            target_focal_point = torch.tensor([[0.0, 0.0, 0.04]], dtype=torch.float32)
             
             # --- 2. GENERATE PHASES DYNAMICALLY ---
             # Calculate the exact phase delays needed to steer the twin trap to the target

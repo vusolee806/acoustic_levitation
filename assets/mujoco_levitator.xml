@@ -344,7 +344,7 @@
         <body name="test_ball" pos="0 0 0.05">
             <freejoint/>
             <!-- Scaled down to 5mm radius 1 gram -->
-            <geom type="sphere" size="0.005" density="40" rgba="1 0.8 0 1"/>
+            <geom type="sphere" size="0.002" density="40" rgba="1 0.8 0 1"/>
         </body>
     </worldbody>
 
