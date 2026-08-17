@@ -1,0 +1,438 @@
+<mujoco model="Real Scale Acoustic Levitator">
+    <compiler angle="degree"/>
+
+    <!-- Set standard air density (1.225) and viscosity (1.85e-5) -->
+    <!-- Lower timestep to 0.1 milliseconds for high stability -->
+    <option timestep="0.0001" density="1.225" viscosity="1.85e-5"/>
+
+    <asset>
+        <material name="sensor_mat" rgba="0.2 0.6 1 1"/>
+    </asset>
+    <default>
+        <geom friction="1.0 0.005 0.1"/>
+    </default>
+    <worldbody>
+        <light diffuse=".5 .5 .5" pos="0 0 0.5" dir="0 0 -1"/>
+        <geom type="plane" size="0.5 0.5 0.01" rgba=".9 .9 .9 1" pos="0 0 -0.15"/>
+
+        <body name="sensor_1" pos="0.01968 0.01136 -0.08294">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.2289 -0.1321 0.9645" material="sensor_mat"/>
+            <site name="site_sensor_1" pos="0 0 0" zaxis="-0.2289 -0.1321 0.9645" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_2" pos="0.00000 0.02273 -0.08294">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.0000 -0.2643 0.9645" material="sensor_mat"/>
+            <site name="site_sensor_2" pos="0 0 0" zaxis="-0.0000 -0.2643 0.9645" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_3" pos="-0.01968 0.01136 -0.08294">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.2289 -0.1321 0.9645" material="sensor_mat"/>
+            <site name="site_sensor_3" pos="0 0 0" zaxis="0.2289 -0.1321 0.9645" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_4" pos="-0.01968 -0.01136 -0.08294">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.2289 0.1321 0.9645" material="sensor_mat"/>
+            <site name="site_sensor_4" pos="0 0 0" zaxis="0.2289 0.1321 0.9645" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_5" pos="-0.00000 -0.02273 -0.08294">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.0000 0.2643 0.9645" material="sensor_mat"/>
+            <site name="site_sensor_5" pos="0 0 0" zaxis="0.0000 0.2643 0.9645" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_6" pos="0.01968 -0.01136 -0.08294">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.2289 0.1321 0.9645" material="sensor_mat"/>
+            <site name="site_sensor_6" pos="0 0 0" zaxis="-0.2289 0.1321 0.9645" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_7" pos="0.04384 0.00000 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.5097 -0.0000 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_7" pos="0 0 0" zaxis="-0.5097 -0.0000 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_8" pos="0.03796 0.02192 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.4414 -0.2549 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_8" pos="0 0 0" zaxis="-0.4414 -0.2549 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_9" pos="0.02192 0.03796 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.2549 -0.4414 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_9" pos="0 0 0" zaxis="-0.2549 -0.4414 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_10" pos="0.00000 0.04384 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.0000 -0.5097 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_10" pos="0 0 0" zaxis="-0.0000 -0.5097 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_11" pos="-0.02192 0.03796 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.2549 -0.4414 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_11" pos="0 0 0" zaxis="0.2549 -0.4414 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_12" pos="-0.03796 0.02192 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.4414 -0.2549 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_12" pos="0 0 0" zaxis="0.4414 -0.2549 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_13" pos="-0.04384 0.00000 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.5097 -0.0000 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_13" pos="0 0 0" zaxis="0.5097 -0.0000 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_14" pos="-0.03796 -0.02192 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.4414 0.2549 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_14" pos="0 0 0" zaxis="0.4414 0.2549 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_15" pos="-0.02192 -0.03796 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.2549 0.4414 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_15" pos="0 0 0" zaxis="0.2549 0.4414 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_16" pos="-0.00000 -0.04384 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.0000 0.5097 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_16" pos="0 0 0" zaxis="0.0000 0.5097 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_17" pos="0.02192 -0.03796 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.2549 0.4414 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_17" pos="0 0 0" zaxis="-0.2549 0.4414 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_18" pos="0.03796 -0.02192 -0.07399">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.4414 0.2549 0.8603" material="sensor_mat"/>
+            <site name="site_sensor_18" pos="0 0 0" zaxis="-0.4414 0.2549 0.8603" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_19" pos="0.06078 0.01136 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.7067 -0.1321 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_19" pos="0 0 0" zaxis="-0.7067 -0.1321 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_20" pos="0.05257 0.03255 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.6113 -0.3785 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_20" pos="0 0 0" zaxis="-0.6113 -0.3785 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_21" pos="0.03726 0.04934 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.4333 -0.5738 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_21" pos="0 0 0" zaxis="-0.4333 -0.5738 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_22" pos="0.01692 0.05947 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.1968 -0.6915 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_22" pos="0 0 0" zaxis="-0.1968 -0.6915 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_23" pos="-0.00571 0.06157 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.0663 -0.7159 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_23" pos="0 0 0" zaxis="0.0663 -0.7159 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_24" pos="-0.02756 0.05535 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.3205 -0.6436 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_24" pos="0 0 0" zaxis="0.3205 -0.6436 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_25" pos="-0.04569 0.04166 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.5313 -0.4844 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_25" pos="0 0 0" zaxis="0.5313 -0.4844 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_26" pos="-0.05766 0.02234 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.6704 -0.2597 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_26" pos="0 0 0" zaxis="0.6704 -0.2597 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_27" pos="-0.06183 0.00000 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.7190 -0.0000 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_27" pos="0 0 0" zaxis="0.7190 -0.0000 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_28" pos="-0.05766 -0.02234 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.6704 0.2597 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_28" pos="0 0 0" zaxis="0.6704 0.2597 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_29" pos="-0.04569 -0.04166 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.5313 0.4844 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_29" pos="0 0 0" zaxis="0.5313 0.4844 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_30" pos="-0.02756 -0.05535 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.3205 0.6436 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_30" pos="0 0 0" zaxis="0.3205 0.6436 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_31" pos="-0.00571 -0.06157 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.0663 0.7159 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_31" pos="0 0 0" zaxis="0.0663 0.7159 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_32" pos="0.01692 -0.05947 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.1968 0.6915 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_32" pos="0 0 0" zaxis="-0.1968 0.6915 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_33" pos="0.03726 -0.04934 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.4333 0.5738 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_33" pos="0 0 0" zaxis="-0.4333 0.5738 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_34" pos="0.05257 -0.03255 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.6113 0.3785 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_34" pos="0 0 0" zaxis="-0.6113 0.3785 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_35" pos="0.06078 -0.01136 -0.05977">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.7067 0.1321 0.6950" material="sensor_mat"/>
+            <site name="site_sensor_35" pos="0 0 0" zaxis="-0.7067 0.1321 0.6950" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_36" pos="0.07543 0.00000 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.8771 -0.0000 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_36" pos="0 0 0" zaxis="-0.8771 -0.0000 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_37" pos="0.07208 0.02223 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.8381 -0.2585 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_37" pos="0 0 0" zaxis="-0.8381 -0.2585 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_38" pos="0.06232 0.04249 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.7247 -0.4941 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_38" pos="0 0 0" zaxis="-0.7247 -0.4941 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_39" pos="0.04703 0.05897 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.5469 -0.6857 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_39" pos="0 0 0" zaxis="-0.5469 -0.6857 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_40" pos="0.02756 0.07022 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.3204 -0.8165 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_40" pos="0 0 0" zaxis="-0.3204 -0.8165 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_41" pos="0.00564 0.07522 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.0655 -0.8746 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_41" pos="0 0 0" zaxis="-0.0655 -0.8746 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_42" pos="-0.01678 0.07354 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.1952 -0.8551 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_42" pos="0 0 0" zaxis="0.1952 -0.8551 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_43" pos="-0.03771 0.06532 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.4385 -0.7596 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_43" pos="0 0 0" zaxis="0.4385 -0.7596 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_44" pos="-0.05529 0.05131 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.6430 -0.5966 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_44" pos="0 0 0" zaxis="0.6430 -0.5966 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_45" pos="-0.06796 0.03273 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.7902 -0.3806 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_45" pos="0 0 0" zaxis="0.7902 -0.3806 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_46" pos="-0.07459 0.01124 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.8673 -0.1307 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_46" pos="0 0 0" zaxis="0.8673 -0.1307 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_47" pos="-0.07459 -0.01124 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.8673 0.1307 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_47" pos="0 0 0" zaxis="0.8673 0.1307 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_48" pos="-0.06796 -0.03273 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.7902 0.3806 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_48" pos="0 0 0" zaxis="0.7902 0.3806 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_49" pos="-0.05529 -0.05131 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.6430 0.5966 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_49" pos="0 0 0" zaxis="0.6430 0.5966 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_50" pos="-0.03771 -0.06532 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.4385 0.7596 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_50" pos="0 0 0" zaxis="0.4385 0.7596 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_51" pos="-0.01678 -0.07354 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.1952 0.8551 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_51" pos="0 0 0" zaxis="0.1952 0.8551 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_52" pos="0.00564 -0.07522 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.0655 0.8746 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_52" pos="0 0 0" zaxis="-0.0655 0.8746 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_53" pos="0.02756 -0.07022 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.3204 0.8165 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_53" pos="0 0 0" zaxis="-0.3204 0.8165 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_54" pos="0.04703 -0.05897 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.5469 0.6857 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_54" pos="0 0 0" zaxis="-0.5469 0.6857 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_55" pos="0.06232 -0.04249 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.7247 0.4941 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_55" pos="0 0 0" zaxis="-0.7247 0.4941 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_56" pos="0.07208 -0.02223 -0.04131">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.8381 0.2585 0.4803" material="sensor_mat"/>
+            <site name="site_sensor_56" pos="0 0 0" zaxis="-0.8381 0.2585 0.4803" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_57" pos="0.08289 0.01139 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.9638 -0.1325 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_57" pos="0 0 0" zaxis="-0.9638 -0.1325 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_58" pos="0.07674 0.03333 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.8923 -0.3876 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_58" pos="0 0 0" zaxis="-0.8923 -0.3876 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_59" pos="0.06490 0.05280 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.7546 -0.6139 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_59" pos="0 0 0" zaxis="-0.7546 -0.6139 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_60" pos="0.04825 0.06835 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.5610 -0.7948 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_60" pos="0 0 0" zaxis="-0.5610 -0.7948 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_61" pos="0.02802 0.07883 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.3258 -0.9167 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_61" pos="0 0 0" zaxis="-0.3258 -0.9167 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_62" pos="0.00571 0.08347 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.0664 -0.9706 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_62" pos="0 0 0" zaxis="-0.0664 -0.9706 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_63" pos="-0.01702 0.08191 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.1979 -0.9525 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_63" pos="0 0 0" zaxis="0.1979 -0.9525 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_64" pos="-0.03849 0.07428 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.4476 -0.8638 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_64" pos="0 0 0" zaxis="0.4476 -0.8638 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_65" pos="-0.05711 0.06114 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.6640 -0.7110 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_65" pos="0 0 0" zaxis="0.6640 -0.7110 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_66" pos="-0.07148 0.04347 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.8312 -0.5055 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_66" pos="0 0 0" zaxis="0.8312 -0.5055 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_67" pos="-0.08056 0.02257 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.9368 -0.2625 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_67" pos="0 0 0" zaxis="0.9368 -0.2625 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_68" pos="-0.08366 0.00000 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.9728 -0.0000 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_68" pos="0 0 0" zaxis="0.9728 -0.0000 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_69" pos="-0.08056 -0.02257 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.9368 0.2625 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_69" pos="0 0 0" zaxis="0.9368 0.2625 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_70" pos="-0.07148 -0.04347 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.8312 0.5055 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_70" pos="0 0 0" zaxis="0.8312 0.5055 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_71" pos="-0.05711 -0.06114 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.6640 0.7110 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_71" pos="0 0 0" zaxis="0.6640 0.7110 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_72" pos="-0.03849 -0.07428 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.4476 0.8638 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_72" pos="0 0 0" zaxis="0.4476 0.8638 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_73" pos="-0.01702 -0.08191 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="0.1979 0.9525 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_73" pos="0 0 0" zaxis="0.1979 0.9525 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_74" pos="0.00571 -0.08347 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.0664 0.9706 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_74" pos="0 0 0" zaxis="-0.0664 0.9706 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_75" pos="0.02802 -0.07883 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.3258 0.9167 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_75" pos="0 0 0" zaxis="-0.3258 0.9167 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_76" pos="0.04825 -0.06835 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.5610 0.7948 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_76" pos="0 0 0" zaxis="-0.5610 0.7948 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_77" pos="0.06490 -0.05280 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.7546 0.6139 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_77" pos="0 0 0" zaxis="-0.7546 0.6139 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_78" pos="0.07674 -0.03333 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.8923 0.3876 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_78" pos="0 0 0" zaxis="-0.8923 0.3876 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+        <body name="sensor_79" pos="0.08289 -0.01139 -0.01991">
+            <geom type="cylinder" size="0.0100 0.005" zaxis="-0.9638 0.1325 0.2315" material="sensor_mat"/>
+            <site name="site_sensor_79" pos="0 0 0" zaxis="-0.9638 0.1325 0.2315" size="0.001" rgba="1 0 0 1"/>
+        </body>
+
+
+        <!-- test object -->
+
+        <body name="test_rice" pos="0 1 0.00">
+            <freejoint/>
+            <!-- Scaled down to 1mm radius, 2mm half-length -->
+            <geom type="capsule" size="0.001 0.002" mass="0.0001" rgba="0.9 0.9 0.8 1"/>
+        </body>
+
+        <body name="test_ball" pos="0 0 0.05">
+            <freejoint/>
+            <!-- Scaled down to 5mm radius 1 gram -->
+            <geom type="sphere" size="0.005" density="40" rgba="1 0.8 0 1"/>
+        </body>
+    </worldbody>
+
+
+
+
+
+
+    <!-- sensor block -->
+    <sensor>
+        <rangefinder name="ultra_1" site="site_sensor_1" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_2" site="site_sensor_2" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_3" site="site_sensor_3" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_4" site="site_sensor_4" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_5" site="site_sensor_5" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_6" site="site_sensor_6" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_7" site="site_sensor_7" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_8" site="site_sensor_8" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_9" site="site_sensor_9" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_10" site="site_sensor_10" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_11" site="site_sensor_11" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_12" site="site_sensor_12" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_13" site="site_sensor_13" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_14" site="site_sensor_14" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_15" site="site_sensor_15" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_16" site="site_sensor_16" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_17" site="site_sensor_17" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_18" site="site_sensor_18" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_19" site="site_sensor_19" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_20" site="site_sensor_20" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_21" site="site_sensor_21" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_22" site="site_sensor_22" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_23" site="site_sensor_23" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_24" site="site_sensor_24" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_25" site="site_sensor_25" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_26" site="site_sensor_26" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_27" site="site_sensor_27" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_28" site="site_sensor_28" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_29" site="site_sensor_29" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_30" site="site_sensor_30" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_31" site="site_sensor_31" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_32" site="site_sensor_32" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_33" site="site_sensor_33" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_34" site="site_sensor_34" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_35" site="site_sensor_35" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_36" site="site_sensor_36" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_37" site="site_sensor_37" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_38" site="site_sensor_38" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_39" site="site_sensor_39" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_40" site="site_sensor_40" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_41" site="site_sensor_41" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_42" site="site_sensor_42" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_43" site="site_sensor_43" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_44" site="site_sensor_44" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_45" site="site_sensor_45" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_46" site="site_sensor_46" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_47" site="site_sensor_47" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_48" site="site_sensor_48" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_49" site="site_sensor_49" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_50" site="site_sensor_50" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_51" site="site_sensor_51" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_52" site="site_sensor_52" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_53" site="site_sensor_53" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_54" site="site_sensor_54" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_55" site="site_sensor_55" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_56" site="site_sensor_56" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_57" site="site_sensor_57" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_58" site="site_sensor_58" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_59" site="site_sensor_59" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_60" site="site_sensor_60" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_61" site="site_sensor_61" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_62" site="site_sensor_62" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_63" site="site_sensor_63" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_64" site="site_sensor_64" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_65" site="site_sensor_65" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_66" site="site_sensor_66" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_67" site="site_sensor_67" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_68" site="site_sensor_68" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_69" site="site_sensor_69" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_70" site="site_sensor_70" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_71" site="site_sensor_71" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_72" site="site_sensor_72" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_73" site="site_sensor_73" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_74" site="site_sensor_74" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_75" site="site_sensor_75" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_76" site="site_sensor_76" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_77" site="site_sensor_77" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_78" site="site_sensor_78" cutoff="0.15" noise="0.01"/>
+        <rangefinder name="ultra_79" site="site_sensor_79" cutoff="0.15" noise="0.01"/>
+    </sensor>
+</mujoco>
