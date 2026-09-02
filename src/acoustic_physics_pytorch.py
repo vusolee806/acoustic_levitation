@@ -71,9 +71,9 @@ def calculate_complex_pressure(point, trans_pos, trans_zaxis, phases):
     Calculates the total complex pressure P at a given 3D point.
     Implements Equations 1 and 2 from the reference.
     """
-    vec_to_point = point.unsqueeze(1) - trans_pos.unsqueeze(0)
-    d = torch.linalg.norm(vec_to_point, dim=2)
-    d = torch.where(d < 1e-5, torch.tensor(1e-5, device=point.device), d)
+    vec_to_point = point.unsqueeze(1) - trans_pos.unsqueeze(0)  #
+    d = torch.linalg.norm(vec_to_point, dim=2) #find d
+    d = torch.where(d < 1e-5, torch.tensor(1e-5, device=point.device), d) #avoid devision by zero
     
     dir_to_point = vec_to_point / d.unsqueeze(2)
     cos_theta = torch.sum(trans_zaxis.unsqueeze(0) * dir_to_point, dim=2)
