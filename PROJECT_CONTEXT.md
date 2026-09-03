@@ -7,15 +7,18 @@
 ## What this project is
 
 A 79-transducer bowl-shaped acoustic levitator simulated in MuJoCo. The
-goal is to learn a policy (RL) that picks a 3-D target focal point so a
-single EPS-foam ball (`test_ball`, density 40 kg/m³, radius 2 mm)
-hovers and steers toward the requested location.
+project demonstrates acoustic radiation force computation and particle
+levitation using a single EPS-foam ball (`test_ball`, density 40 kg/m³, 
+radius 2 mm) that hovers and can be steered toward target focal points.
 
-Two physics backends exist:
+Three physics backends exist:
 
 - **NumPy / finite differences** — `src/acoustic_physics.py`.
 - **PyTorch + autograd** — `src/acoustic_physics_pytorch.py`
-  (preferred; gradient is exact, used by the Gymnasium env).
+  (gradient is exact, used for custom physics).
+- **Levitate library** — `scripts/twintrap_gemini_levitate.py`
+  (current preferred method; uses external `levitate` package for
+  radiation force computation with twin-trap and vortex signatures).
 
 A separate Isaac Sim script (`scripts/issac_acoustic.py`) mirrors the
 MuJoCo setup for higher-fidelity visualization.
@@ -25,50 +28,46 @@ MuJoCo setup for higher-fidelity visualization.
 ```
 acoustic_levitation_project/
 ├── README.md                 # bare-bones; lists the expected tree
-├── requirements.txt          # gymnasium 1.2.3, torch 2.12.0, mujoco 3.9.0, ...
+├── requirements.txt          # torch 2.12.0, mujoco 3.9.0, levitate, ...
 ├── setup.py                  # installs `src` as a package
 ├── MUJOCO_LOG.TXT            # historical warnings: Nan/Inf in QACC
 ├── assets/
 │   ├── mujoco_levitator.xml  # MAIN xml — bowl + 79 sites + test_ball freejoint
-│   ├── mujoco_array.xml      # older xml (not used by the env)
+│   ├── mujoco_array.xml      # older xml (not used)
 │   ├── bowl_base.stl         # mesh present but NOT referenced by the XML
 │   └── thick_bowl_base.stl   # mesh present but NOT referenced by the XML
 ├── configs/default_config.yaml
 ├── scripts/
 │   ├── twin_trap.py          # NumPy reference control loop
-│   ├── twin_trap_pytorch.py  # PyTorch reference control loop (pattern source)
-│   ├── issac_acoustic.py     # Isaac Sim variant
-│   ├── test_env_rollout.py   # NEW — random-policy smoke test for AcousticLevitator-v0
-│   └── train_td3_levitator.py # NEW — TD3 / TD3_per / DDPG / DDPG_per / MADDPG trainer
+│   ├── twin_trap_pytorch.py  # PyTorch reference control loop
+│   ├── twintrap_gemini_levitate.py  # CURRENT — levitate library twin-trap demo
+│   └── issac_acoustic.py     # Isaac Sim variant
 ├── src/
-│   ├── __init__.py           # registers `AcousticLevitator-v0`
+│   ├── __init__.py           # package initialization
 │   ├── utils.py              # `get_asset_path(filename)` — resolves XML paths
 │   ├── acoustic_physics.py             # NumPy pressure / Gor'kov / ARF
-│   ├── acoustic_physics_pytorch.py     # PyTorch version + `get_physics_outputs`
-│   └── levitator_env.py       # NEW — `AcousticLevitatorEnv(gym.Env)`
+│   └── acoustic_physics_pytorch.py     # PyTorch version + `get_physics_outputs`
 ├── examples/
 │   ├── heatmap.py
 │   ├── test_physics_pytorch.py
 │   └── test_sound_wave.py
-├── logs/                     # plots, smoke-test outputs
-└── check_points/             # saved RL checkpoints
+└── logs/                     # plots, simulation outputs
 ```
-
-The sibling library `../AcoustoRL/` provides the RL algorithms. See
-`AcoustoRL/README.md` for the upstream driver pattern.
 
 ## MuJoCo model summary (`assets/mujoco_levitator.xml`)
 
 - `timestep=0.0001`, density=1.225, viscosity=1.85e-5 (air-like).
 - 79 transducer bodies `sensor_1..sensor_79`, each with `site_sensor_N`
   positioned at the array surface and a cylinder geom. Sites carry
-  per-transducer orientation via `site_quat`.
+  per-transducer orientation via `site_quat`. Arranged in a bowl shape.
+- Bowl geometry: a curved reflective surface surrounds the transducer array
+  to enhance acoustic field confinement.
 - `test_ball` body: freejoint (6 DOF), sphere size=0.002 m, density=40,
-  initial pos `(0, 0, 0.05)`.
+  initial pos `(0, 0, 0.05)`. Material: EPS foam (sound speed 1200 m/s).
 - 79 rangefinder sensors along each transducer's z-axis.
 - No mesh references in the XML — the STL files on disk are unused.
 
-## Key constants (from `src/acoustic_physics_pytorch.py`)
+## Key constants (shared across backends)
 
 | Symbol | Value | Meaning |
 |---|---|---|
@@ -78,106 +77,176 @@ The sibling library `../AcoustoRL/` provides the RL algorithms. See
 | `RHO_1` | 40.0 kg/m³ | EPS density |
 | `PARTICLE_RADIUS` | 0.002 m | Ball radius |
 | `FREQ` | 40 kHz | Ultrasonic carrier (λ ≈ 8.575 mm) |
-| `TRANSDUCER_RADIUS` | 0.01 m | Piston radius |
-| `P0_A` | 40.0 | Amplitude × directivity scale |
-| `K1`, `K2` | derived | Gor'kov potential coefficients |
+| `TRANSDUCER_RADIUS` | 0.01 m | Piston radius (legacy) |
+| `TRANSDUCER_SIZE` | 0.02 m | Transducer diameter (levitate) |
 
-The twin-trap phase generator (`generate_twin_trap_phases`) computes
-focusing phases from the distance-to-focal ratio modulo 1, then adds π
-to every transducer whose `x > 0` (the twin-trap signature).
+## Levitate Library Integration
 
-## AcousticLevitator-v0 (the Gymnasium env)
+The current preferred method uses the external `levitate` library
+(`scripts/twintrap_gemini_levitate.py`). Key workflow:
 
-Source: `src/levitator_env.py`, registered in `src/__init__.py`.
-
-| Aspect | Value |
-|---|---|
-| **Action space** | `Box(3,)` — target focal `(x, y, z)` |
-|   bounds | `x, y ∈ [-0.025, 0.025]`, `z ∈ [0.02, 0.08]` |
-| **Observation** | `Box(9,)` — `[ball_pos, ball_vel, target_focal]` |
-| **Reward** | `−50 · ‖ball − target‖ − 0.001 · ‖v‖² + 0.01` |
-| **Episode length** | 500 steps |
-| **Termination** | ball leaves safe box, or NaN in `qpos`/`qvel`/`ARF` |
-| **Truncation** | `max_episode_steps` reached |
-| **Force clip** | `±0.5 N` (addresses QACC NaN warnings) |
-
-### Per-step pipeline
-1. Clip action → set `_target_focal`.
-2. `phases = generate_twin_trap_phases(focal, trans_pos)`.
-3. `_, F = get_physics_outputs(ball_pos[None], trans_pos, trans_zaxis, phases)`.
-4. Clip F to ±MAX_FORCE, NaN-guard → 0 with `terminated=True`.
-5. Add optional linear drag, write to `data.qfrc_applied[ball_dofadr:ball_dofadr+3]`.
-6. `mj_step`; check workspace + finiteness.
-7. Sample fresh `target` on `reset()` (or pass via `options["target"]`).
-
-### Transducer geometry extraction (once at `__init__`)
+### 1. Setup array and materials
 ```python
+import levitate
+
+levitate.frequency = 40000.0  # 40 kHz
+
+# EPS foam particle material
+ball_material = levitate.materials.Material(rho=40.0, c=1200.0)
+
+# Extract transducer geometry from MuJoCo
+mujoco.mj_kinematics(model, data)
 for i in range(79):
-    sid = model.site(f"site_sensor_{i+1}").id
-    transducer_positions[i] = model.site_pos[sid]
-    mujoco.mju_quat2Mat(mat, model.site_quat[sid])
-    transducer_zaxis[i] = mat.reshape(3, 3)[:, 2]
+    site_id = model.site(f"site_sensor_{i+1}").id
+    transducer_positions[i] = data.site_xpos[site_id]
+    mat = data.site_xmat[site_id].reshape(3, 3)
+    transducer_zaxis[i] = mat[:, 2]  # Z-axis vector
+
+# Build levitate array
+array = levitate.arrays.NormalTransducerArray(
+    positions=transducer_positions.T,  # (3, 79)
+    normals=transducer_zaxis.T,
+    transducer_size=0.02  # 20mm diameter
+)
+
+force_evaluator = levitate.fields.RadiationForce(
+    array, radius=0.002, material=ball_material
+)
 ```
-Same pattern as `scripts/twin_trap_pytorch.py:33-44`.
 
-## AcoustoRL integration
+### 2. Generate twin-trap signature
+```python
+target_focal_point = np.array([0.0, 0.0, 0.04])
 
-The training driver mirrors `AcoustoRL/examples/train_agent_DDPG_TD3.py`
-but points the env at `gym.make("AcousticLevitator-v0")`. Supported
-algorithms (imported from `acoustorl`):
+# Focus phases bring field to a point
+focus_phases = array.focus_phases(target_focal_point)
 
-- `TD3`, `TD3_per` (default — proven path)
-- `DDPG`, `DDPG_per`
-- `MADDPG` (also installed but not selected by default)
+# Twin signature splits the trap (stype='twin' or 'vortex')
+twin_signature = array.signature(position=target_focal_point, stype='vortex')
 
-Replay buffer follows the upstream `_per` suffix convention. Target
-folder: `check_points/{env}_{algo}/`.
+# Combine and convert to complex weights
+array.phases = focus_phases + twin_signature
+complex_weights = 0.3 * np.exp(1j * array.phases)
+```
+
+### 3. Visualization (optional)
+```python
+viz = array.visualize
+viz.append(levitate.visualizers.PressureSlice(array))
+fig = viz(complex_weights)
+fig.show()  # Interactive Plotly 3D pressure field
+```
+
+### 4. Runtime force application
+```python
+while viewer.is_running():
+    ball_pos = data.xpos[ball_id]
+    forces_array = force_evaluator(complex_weights, ball_pos)
+    arf_force = np.clip(forces_array, -1.0, 1.0)
+    
+    dof_start = model.body_dofadr[ball_id]
+    data.qfrc_applied[dof_start : dof_start + 3] = arf_force
+    mujoco.mj_step(model, data)
+```
+
+The script logs force components (Fx, Fy, Fz) and ball z-position over
+time, then plots them with matplotlib after the viewer closes.
+
+## Legacy physics backends
+
+### PyTorch backend (`src/acoustic_physics_pytorch.py`)
+
+Differentiable pressure + Gor'kov potential calculation. The function
+`get_physics_outputs()` takes:
+- 79×3 tensor of sensor positions
+- 79 complex-valued transducer amplitudes  
+- ball_pos (3,)
+- optional radius / material properties
+
+Returns a dict:
+```python
+{
+  "pressure": <complex tensor>,
+  "arf_force": <3-D force>,
+  "gorkov_potential": scalar,
+  ...
+}
+```
+
+Previously used for RL training. Still present for custom physics
+experiments but superseded by levitate library for primary simulations.
+
+The twin-trap phase generator (`generate_twin_trap_phases`) in this
+backend computes focusing phases from distance-to-focal ratio modulo 1,
+then adds π to every transducer whose `x > 0` (the twin-trap signature).
+
+### NumPy backend (`src/acoustic_physics.py`)
+
+Finite-difference pressure computation, then Gor'kov potential + gradient.
+Reference implementation, rarely invoked now.
 
 ## How to run
 
 From `acoustic_levitation_project/`:
 
 ```bash
-# 1. Smoke test (random policy, ~30 s)
-python scripts/test_env_rollout.py
-#   → logs/smoke_rollout.png shows ball path
+# Primary: Twin-trap simulation with levitate library
+python scripts/twintrap_gemini_levitate.py
+#   → Interactive Plotly 3D visualization of pressure field
+#   → Matplotlib plots: force components and ball trajectory over time
 
-# 2. Train (TD3, ~20k steps for a sanity run)
-python scripts/train_td3_levitator.py --total_timesteps 20000
-#   → check_points/AcousticLevitator-v0_TD3/{actor0.pth,critic0.pth,...}
+# Legacy: PyTorch backend with twin-trap control
+python scripts/twin_trap_pytorch.py
 
-# 3. Switch algorithms
-python scripts/train_td3_levitator.py --algorithm TD3_per --total_timesteps 50000
-python scripts/train_td3_levitator.py --algorithm DDPG --total_timesteps 50000
+# Legacy: NumPy backend with twin-trap control
+python scripts/twin_trap.py
+
+# Isaac Sim variant
+python scripts/issac_acoustic.py
 ```
+
+## Dependencies
+
+Core packages:
+- `mujoco==3.9.0` — Physics simulation
+- `levitate` — Acoustic field computation and visualization
+- `torch==2.12.0` — Legacy PyTorch backend
+- `numpy` — Numerical operations
+- `matplotlib` — Plotting
+- `plotly` — Interactive 3D visualization
+- `gymnasium==1.2.3` — No longer used for training; imports may remain
 
 ## Environment caveats observed
 
 - **Python 3.14** is the only interpreter installed on the box.
-  `gymnasium 1.2.3`, `torch 2.12.0`, `mujoco 3.9.0` may not have
-  3.14 wheels on PyPI — if `pip install` fails, install Python 3.11
-  and re-create the venv.
-- **GPU**: code paths `torch.cuda.is_available()` autodetect.
+  `torch 2.12.0`, `mujoco 3.9.0` may not have 3.14 wheels on
+  PyPI — if `pip install` fails, install Python 3.11 and re-create
+  the venv.
+- **GPU**: code paths `torch.cuda.is_available()` autodetect (legacy
+  PyTorch backend only).
 - **MuJoCo warnings**: `MUJOCO_LOG.TXT` records `Nan, Inf or huge
   value in QACC` when forces are unclipped or when the ball escapes
-  the workspace. Env clips to ±0.5 N and terminates on workspace exit
-  / NaN, which should suppress these.
+  the workspace. Forces are clipped to ±1 N in the runtime loop, which
+  suppresses these warnings.
 
 ## Known gotchas
 
-- The twin-trap signature in `generate_twin_trap_phases` uses
-  `trans_pos[:, 0] > 0` — not the transducer's outward normal.
-  Adequate for the bowl layout; review if you change geometry.
+- The levitate-based twin-trap signature (`stype='vortex'`) is
+  geometry-aware; the legacy PyTorch generator uses
+  `trans_pos[:, 0] > 0` instead of outward normals. Adequate for the
+  current bowl layout; review if you change geometry.
 - `MUJOCO_LOG.TXT` is the smoking gun for stability issues; check it
-  after a long training run.
+  after a long simulation run.
 - `bowl_base.stl` and `thick_bowl_base.stl` are on disk but not
   referenced by the XML — visuals only, no physics impact.
+- Force clipping at ±1 N caps the maximum lift, but keeps MuJoCo
+  stable. Increase only if you can guarantee the ball never escapes
+  the workspace.
 
 ## Out of scope (for now)
 
 - Multi-particle / multi-agent setups.
-- Curriculum learning, domain randomization.
 - Wiring the bowl-base mesh into the XML.
 - Switching to Isaac Sim (already covered by `scripts/issac_acoustic.py`).
-- SAC integration (the rlkit-style `SAC.py` in `AcoustoRL` is not
-  wired into `algorithm_instantiation`; wire separately if needed).
+- RL training infrastructure (removed from project; legacy
+  experiments left in `examples/` for reference).

@@ -45,7 +45,7 @@ def main():
         
         # 1. Use GLOBAL position from data, not local from model
         transducer_positions[i] = data.site_xpos[site_id]
-        
+
         # 2. Use GLOBAL rotation matrix from data
         mat = data.site_xmat[site_id].reshape(3, 3)
         transducer_zaxis[i] = mat[:, 2]  # The Z-axis vector
@@ -93,11 +93,11 @@ def main():
     focus_phases = array.focus_phases(target_focal_point)
 
     # 2. Use Levitate to apply the Twin Trap signature 
-    twin_signature = array.signature(position=target_focal_point, stype='twin')
+    twin_signature = array.signature(position=target_focal_point, stype='vortex')
 
     # 3. Combine and calculate complex weights exactly ONCE
     array.phases = focus_phases + twin_signature
-    complex_weights = np.exp(1j * array.phases)
+    complex_weights = 0.3 * np.exp(1j * array.phases)
 
     #visulize by library levitate
     # Create a visualizer tied to your array
@@ -109,8 +109,6 @@ def main():
     # Render the interactive Plotly graph using your complex weights
     fig = viz(complex_weights)
     fig.show()
-
-
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
         while viewer.is_running():
