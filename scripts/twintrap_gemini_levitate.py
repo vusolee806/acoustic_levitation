@@ -9,7 +9,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
 import levitate
-
+from src.plot_utils import plot_simulation_results
 # ==========================================
 # 1. ACOUSTIC & MATERIAL CONSTANTS
 # ==========================================
@@ -79,7 +79,7 @@ def main():
     # --- LƯU TRỮ DỮ LIỆU ---
     time_log = []
     fx_log, fy_log, fz_log = [], [], []
-    z_pos_log = []
+    x_pos_log, y_pos_log, z_pos_log = [], [], []  # Added X and Y
 
     print("Đang chạy mô phỏng... Tắt cửa sổ MuJoCo để xem đồ thị!")
 
@@ -93,7 +93,7 @@ def main():
     focus_phases = array.focus_phases(target_focal_point)
 
     # 2. Use Levitate to apply the Twin Trap signature 
-    twin_signature = array.signature(position=target_focal_point, stype='vortex')
+    twin_signature = array.signature(position=target_focal_point, stype='twin')
 
     # 3. Combine and calculate complex weights exactly ONCE
     array.phases = focus_phases + twin_signature
@@ -119,8 +119,8 @@ def main():
             
             # 2. MISSING STEP: Extract and optionally clip the force vector
             # (If ball_pos is shape (3,), forces_array is also (3,))
-            arf_force = np.clip(forces_array, -1.0, 1.0)
-            
+            # arf_force = np.clip(forces_array, -1.0, 1.0)
+            arf_force = forces_array
             # Apply to MuJoCo
             dof_start = model.body_dofadr[ball_id]
             data.qfrc_applied[dof_start : dof_start + 3] = arf_force
@@ -130,8 +130,13 @@ def main():
             fx_log.append(arf_force[0])
             fy_log.append(arf_force[1])
             fz_log.append(arf_force[2])
+
+            # YOU MUST ADD THESE TWO LINES:
+            x_pos_log.append(ball_pos[0])  
+            y_pos_log.append(ball_pos[1])  
+
             z_pos_log.append(ball_pos[2])
-            
+
             mujoco.mj_step(model, data)
             viewer.sync()
 
@@ -140,25 +145,11 @@ def main():
     # ==========================================
     print("Đã tắt mô phỏng. Đang tạo đồ thị...")
     
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
-
-    ax1.plot(time_log, fz_log, label='F_z (Vertical Force)', color='blue')
-    ax1.plot(time_log, fx_log, label='F_x (Lateral Force)', color='red', alpha=0.6)
-    ax1.plot(time_log, fy_log, label='F_y (Lateral Force)', color='green', alpha=0.6)
-    ax1.set_ylabel("Force (Newtons)")
-    ax1.set_title("Acoustic Radiation Force over Time (Levitate Engine)")
-    ax1.legend()
-    ax1.grid(True)
-
-    ax2.plot(time_log, z_pos_log, label='Z Position (Height)', color='purple')
-    ax2.set_xlabel("Simulation Time (Seconds)")
-    ax2.set_ylabel("Height (Meters)")
-    ax2.set_title("Particle Trajectory (Settling into Trap)")
-    ax2.legend()
-    ax2.grid(True)
-
-    plt.tight_layout()
-    plt.show()
+    plot_simulation_results(
+        time_log, 
+        fx_log, fy_log, fz_log, 
+        x_pos_log, y_pos_log, z_pos_log
+    )
 
 if __name__ == "__main__":
     main()
