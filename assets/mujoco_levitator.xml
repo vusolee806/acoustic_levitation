@@ -13,9 +13,9 @@
     </asset>
 
 
-    <default>
+    <!-- <default>
         <geom friction="1.0 0.005 0.1"/>
-    </default>
+    </default> -->
 
 
     <worldbody>
@@ -23,9 +23,9 @@
         <geom type="plane" size="0.5 0.5 0.01" rgba=".9 .9 .9 1" pos="0 0 -0.15"/>
 
         <!-- The 3D Bowl Housing Shell -->
-        <body name="transducer_housing" pos="0 0 0">
+        <!-- <body name="transducer_housing" pos="0 0 0">
             <geom name="bowl_geom" type="mesh" mesh="bowl_mesh" material="bowl_mat" contype="1" conaffinity="1"/>
-        </body>
+        </body> -->
 
         <!-- Transducer 1 to 79 bodies follow here... -->
         <body name="sensor_1" pos="0.01968 0.01136 -0.08294">
@@ -356,8 +356,9 @@
 
         <body name="test_ball" pos="0 0 0.04">
             <freejoint/>
-            <!-- Scaled down to 5mm radius 1 gram -->
-            <geom type="sphere" size="0.002" density="40" rgba="1 0.8 0 1"/>
+            <!-- Added fluid properties to dampen the vibrations 
+             fluidshape="sphere" fluidcoef="1 1 1 1 1 1"--> 
+    <geom type="sphere" size="0.0018" density="40" rgba="1 0.8 0 1" fluidshape="ellipsoid" fluidcoef="1 1 1 1 1"/>
         </body>
     </worldbody>
 

@@ -10,17 +10,18 @@ sys.path.append(PROJECT_ROOT)
 
 import levitate
 from src.plot_utils import plot_simulation_results
-# ==========================================
-# 1. ACOUSTIC & MATERIAL CONSTANTS
-# ==========================================
-FREQ = 40000.0         # Operating frequency (Hz)
-C_0 = 343.0            # Speed of sound in air (m/s)
-RHO_0 = 1.225          # Density of air (kg/m^3)
-WAVELENGTH = C_0 / FREQ 
+import configs.constants as const
+# # ==========================================
+# # 1. ACOUSTIC & MATERIAL CONSTANTS
+# # ==========================================
+# FREQ = 40000.0         # Operating frequency (Hz)
+# C_0 = 343.0            # Speed of sound in air (m/s)
+# RHO_0 = 1.225          # Density of air (kg/m^3)
+# WAVELENGTH = C_0 / FREQ 
 
-C_1 = 1200.0           # Speed of sound in EPS foam (m/s)
-RHO_1 = 40.0           # Density of EPS foam (kg/m^3)
-PARTICLE_RADIUS = 0.002 # 2mm
+# C_1 = 1200.0           # Speed of sound in EPS foam (m/s)
+# RHO_1 = 40.0           # Density of EPS foam (kg/m^3)
+# PARTICLE_RADIUS = 0.003 # 2mm
 
 def main():
     xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_levitator.xml")
@@ -55,27 +56,18 @@ def main():
     # ==========================================
     # 2. SETUP LEVITATE ARRAY AND MATERIALS
     # ==========================================
-    levitate.frequency = FREQ
-
-    # Define only the levitated particle's material. Levitate defaults to air natively.
-    ball_material = levitate.materials.Material(rho=RHO_1, c=C_1)
-    
-    # Transpose to (3, N) shape for Levitate
-    #define your array and change it from TransducerArray to NormalTransducerArray
-    #Because NormalTransducerArray overrides the .signature() method, it will now correctly recognize stype='twin'
-    # and automatically calculate the geometric splitting without requiring you to pass phases
+    levitate.frequency = const.FREQ
+    ball_material = levitate.materials.Material(rho=const.RHO_1, c=const.C_1)
     
     array = levitate.arrays.NormalTransducerArray(
         positions=transducer_positions.T, 
         normals=transducer_zaxis.T,
-        transducer_size=0.02  # Set to the 20mm diameter from your XML
+        transducer_size=const.TRANSDUCER_SIZE  
     )
     
-    # Remove the 'medium=air' argument entirely
     force_evaluator = levitate.fields.RadiationForce(
-        array, radius=PARTICLE_RADIUS, material=ball_material
+        array, radius=const.PARTICLE_RADIUS, material=ball_material
     )
-
     # --- LƯU TRỮ DỮ LIỆU ---
     time_log = []
     fx_log, fy_log, fz_log = [], [], []
@@ -84,7 +76,7 @@ def main():
     print("Đang chạy mô phỏng... Tắt cửa sổ MuJoCo để xem đồ thị!")
 
     # Apply the frequency directly to the array
-    array.freq = FREQ
+    array.freq = const.FREQ
 
     # Define the target
     target_focal_point = np.array([0.0, 0.0, 0.04])
@@ -97,14 +89,26 @@ def main():
 
     # 3. Combine and calculate complex weights exactly ONCE
     array.phases = focus_phases + twin_signature
-    complex_weights = 0.3 * np.exp(1j * array.phases)
+    complex_weights = 0.4 * np.exp(1j * array.phases)
 
     #visulize by library levitate
     # Create a visualizer tied to your array
     viz = array.visualize
 
-    # Add a 3D slice showing the sound pressure field (SPL)
-    viz.append(levitate.visualizers.PressureSlice(array))
+    # 1. XZ Plane (Front View) - Normal points along Y
+    viz.append(levitate.visualizers.PressureSlice(
+        array, normal=(0, 1, 0), intersect=target_focal_point
+    ))
+
+    # 2. YZ Plane (Side View) - Normal points along X
+    viz.append(levitate.visualizers.PressureSlice(
+        array, normal=(1, 0, 0), intersect=target_focal_point
+    ))
+
+    # 3. XY Plane (Top-Down View) - Normal points along Z
+    viz.append(levitate.visualizers.PressureSlice(
+        array, normal=(0, 0, 1), intersect=target_focal_point
+    ))
 
     # Render the interactive Plotly graph using your complex weights
     fig = viz(complex_weights)

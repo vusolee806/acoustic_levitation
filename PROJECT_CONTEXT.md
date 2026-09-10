@@ -173,8 +173,9 @@ Returns a dict:
 }
 ```
 
-Previously used for RL training. Still present for custom physics
-experiments but superseded by levitate library for primary simulations.
+Previously the primary backend for this project; now superseded by the
+levitate library for primary simulations. Still present for custom
+physics experiments and as a reference implementation.
 
 The twin-trap phase generator (`generate_twin_trap_phases`) in this
 backend computes focusing phases from distance-to-focal ratio modulo 1,
