@@ -24,7 +24,7 @@ import omni.physx as _physx
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 import levitate
-from src.plot_utils import plot_simulation_results
+from test.plot_utils import plot_simulation_results
 
 # Acoustic Constants
 FREQ = 40000.0         

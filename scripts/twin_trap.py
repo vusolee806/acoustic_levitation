@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt  # Thêm thư viện vẽ đồ thị
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-from src.acoustic_physics import calculate_arf 
+from test.acoustic_physics import calculate_arf 
 
 def main():
     xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_levitator.xml")

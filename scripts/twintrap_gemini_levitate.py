@@ -9,7 +9,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
 import levitate
-from src.plot_utils import plot_simulation_results
+from test.plot_utils import plot_simulation_results
 import configs.constants as const
 # # ==========================================
 # # 1. ACOUSTIC & MATERIAL CONSTANTS
@@ -79,7 +79,7 @@ def main():
     array.freq = const.FREQ
 
     # Define the target
-    target_focal_point = np.array([0.0, 0.0, 0.04])
+    target_focal_point = np.array([0.0, 0.0, 0.03])
 
     # 1. Use Levitate to get focus phases
     focus_phases = array.focus_phases(target_focal_point)
@@ -114,35 +114,89 @@ def main():
     fig = viz(complex_weights)
     fig.show()
 
+    # Set how often to update the screen (e.g., every 15 physics steps)
+    render_interval = 15  
+    step_counter = 0
+
     with mujoco.viewer.launch_passive(model, data) as viewer:
         while viewer.is_running():
+            step_counter += 1
+            
+            # ==========================================
+            # 1. EVERY STEP: PHYSICS & LOGGING 
+            # (This must run as fast as possible)
+            # ==========================================
+            data.qfrc_applied[:] = 0.0 
             ball_pos = data.xpos[ball_id]
             
-            # 1. Evaluate the acoustic force
             forces_array = force_evaluator(complex_weights, ball_pos)
-            
-            # 2. MISSING STEP: Extract and optionally clip the force vector
-            # (If ball_pos is shape (3,), forces_array is also (3,))
-            # arf_force = np.clip(forces_array, -1.0, 1.0)
             arf_force = forces_array
-            # Apply to MuJoCo
-            dof_start = model.body_dofadr[ball_id]
-            data.qfrc_applied[dof_start : dof_start + 3] = arf_force
             
-            # --- LƯU DỮ LIỆU ---
+            torque = np.array([0.0, 0.0, 0.0]) 
+            mujoco.mj_applyFT(model, data, arf_force, torque, ball_pos, ball_id, data.qfrc_applied)
+            
+            # Log data for your plot
             time_log.append(data.time)
             fx_log.append(arf_force[0])
             fy_log.append(arf_force[1])
             fz_log.append(arf_force[2])
-
-            # YOU MUST ADD THESE TWO LINES:
             x_pos_log.append(ball_pos[0])  
             y_pos_log.append(ball_pos[1])  
-
             z_pos_log.append(ball_pos[2])
 
+            # Advance the physics engine
             mujoco.mj_step(model, data)
-            viewer.sync()
+            
+            # ==========================================
+            # 2. EVERY N STEPS: VISUALIZATION
+            # ==========================================
+            if step_counter % render_interval == 0:
+                visual_scale = 1000.0  
+                force_end = ball_pos + (arf_force * visual_scale)
+                
+                # # The exact center of the acoustic trap
+                # target_focal_point = np.array([0.0, 0.0, 0.04])
+                
+                with viewer.lock():
+                    viewer.user_scn.ngeom = num_transducers + 1
+                    
+                    # --- A. Draw the 79 blue rays pointing to the TRAP ---
+                    for i in range(num_transducers):
+                        mujoco.mjv_initGeom(
+                            viewer.user_scn.geoms[i],
+                            type=mujoco.mjtGeom.mjGEOM_LINE,
+                            size=np.array([0.0005, 0, 0]),
+                            pos=np.zeros(3),
+                            mat=np.eye(3).flatten(),
+                            rgba=np.array([0.2, 0.5, 1.0, 0.3])
+                        )
+                        mujoco.mjv_connector(
+                            viewer.user_scn.geoms[i], 
+                            mujoco.mjtGeom.mjGEOM_LINE, 
+                            0.0005, 
+                            transducer_positions[i],
+                            target_focal_point   # Correctly mapped to the trap
+                        )
+                    
+                    # --- B. Draw the 1 red force vector pushing the BALL ---
+                    mujoco.mjv_initGeom(
+                        viewer.user_scn.geoms[num_transducers],
+                        type=mujoco.mjtGeom.mjGEOM_CAPSULE,
+                        size=np.array([0.001, 0, 0]),  
+                        pos=np.zeros(3),
+                        mat=np.eye(3).flatten(),
+                        rgba=np.array([1.0, 0.0, 0.0, 1.0])
+                    )
+                    mujoco.mjv_connector(
+                        viewer.user_scn.geoms[num_transducers], 
+                        mujoco.mjtGeom.mjGEOM_CAPSULE, 
+                        0.001,  
+                        ball_pos,      # Correctly mapped to start at the ball
+                        force_end      # Correctly mapped to end at the scaled force
+                    )
+                
+                # Sync the viewer ONLY when we redraw the shapes
+                viewer.sync()
 
     # ==========================================
     # 3. VẼ ĐỒ THỊ

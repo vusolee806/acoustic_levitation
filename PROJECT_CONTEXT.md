@@ -75,7 +75,7 @@ acoustic_levitation_project/
 | `RHO_0` | 1.225 kg/m³ | Air density |
 | `C_1` | 1200.0 m/s | Speed of sound in EPS |
 | `RHO_1` | 40.0 kg/m³ | EPS density |
-| `PARTICLE_RADIUS` | 0.002 m | Ball radius |
+| `PARTICLE_RADIUS` | 0.0019 m | Ball radius |
 | `FREQ` | 40 kHz | Ultrasonic carrier (λ ≈ 8.575 mm) |
 | `TRANSDUCER_RADIUS` | 0.01 m | Piston radius (legacy) |
 | `TRANSDUCER_SIZE` | 0.02 m | Transducer diameter (levitate) |

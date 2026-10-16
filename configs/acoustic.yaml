@@ -1,0 +1,15 @@
+name: acoustic_levitation_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - mujoco==3.9.0
+    - torch==2.12.0
+    - levitate
+    - acoustools
+    - numpy
+    - matplotlib
+    - plotly

@@ -28,7 +28,7 @@ from isaacsim.core.api import World
 from isaacsim.core.api.objects import DynamicSphere, FixedCylinder
 
 # 4. Import the acoustic physics module
-from src.acoustic_physics_pytorch import (
+from test.acoustic_physics_pytorch import (
     generate_twin_trap_phases,
     get_physics_outputs,
     PARTICLE_VOL,
