@@ -9,7 +9,7 @@ import torch
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-from test.plot_utils import plot_simulation_results
+from scripts.plot_utils import plot_simulation_results
 import configs.constants as const
 
 # === AcousTools Imports ===

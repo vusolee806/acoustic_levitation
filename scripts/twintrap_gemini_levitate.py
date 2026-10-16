@@ -9,7 +9,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
 import levitate
-from test.plot_utils import plot_simulation_results
+from scripts.plot_utils import plot_simulation_results
 import configs.constants as const
 # # ==========================================
 # # 1. ACOUSTIC & MATERIAL CONSTANTS

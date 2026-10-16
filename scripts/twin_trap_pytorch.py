@@ -11,7 +11,7 @@ sys.path.append(PROJECT_ROOT)
 
 # 1. IMPORT THE NEW WRAPPER FUNCTION AND PHASE GENERATOR
 
-from test.acoustic_physics_pytorch import get_physics_outputs, generate_twin_trap_phases
+from scripts.acoustic_physics_pytorch import get_physics_outputs, generate_twin_trap_phases
 def main():
     xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_levitator.xml")
     

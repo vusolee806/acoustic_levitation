@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-from test.acoustic_physics import calculate_complex_pressure
-from test.acoustic_physics_pytorch import generate_twin_trap_phases
+from scripts.acoustic_physics import calculate_complex_pressure
+from scripts.acoustic_physics_pytorch import generate_twin_trap_phases
 
 
 def load_array_geometry(xml_filename="mujoco_levitator.xml", num_transducers=79):

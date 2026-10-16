@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Import the physics functions and constants from your src folder
-from test.acoustic_physics import calculate_complex_pressure, TARGET_WAVELENGTH
+from scripts.acoustic_physics import calculate_complex_pressure, TARGET_WAVELENGTH
 
 def visualize_sound_wave():
     # 1. Setup Transducer Array (2 opposed transducers for a standing wave)
