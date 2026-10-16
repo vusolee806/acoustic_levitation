@@ -10,7 +10,7 @@ sys.path.append(PROJECT_ROOT)
 
 import levitate
 from scripts.plot_utils import plot_simulation_results
-import configs.constants as const
+import HemisAcoustic.assets.constants as const
 # # ==========================================
 # # 1. ACOUSTIC & MATERIAL CONSTANTS
 # # ==========================================

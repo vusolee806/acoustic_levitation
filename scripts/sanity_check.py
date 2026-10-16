@@ -7,7 +7,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
 import levitate
-import configs.constants as const
+import HemisAcoustic.assets.constants as const
 
 def main():
     print("--- STARTING ACOUSTIC LEVITATION SANITY CHECKS ---")

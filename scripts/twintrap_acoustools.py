@@ -10,7 +10,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
 from scripts.plot_utils import plot_simulation_results
-import configs.constants as const
+import HemisAcoustic.assets.constants as const
 
 # === AcousTools Imports ===
 from acoustools.Utilities import create_points, device, DTYPE, propagate_abs, add_lev_sig

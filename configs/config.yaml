@@ -1,0 +1,89 @@
+=========================================================
+
+TỔNG QUAN THÍ NGHIỆM (Experiment Tracking - W&B)
+
+=========================================================
+
+experiment:
+project_name: "acoustic-levitation-hemisphere"
+run_name: "hemisphere_test_01"
+seed: 42
+total_timesteps: 500000  # Tổng số bước train (step)
+
+=========================================================
+
+CẤU HÌNH MÔI TRƯỜNG GYM (Environment Dynamics)
+
+=========================================================
+
+env:
+n_particles: 4           # Số lượng hạt cần điều khiển (tác giả gốc dùng 8)
+max_timesteps: 20        # Số bước tối đa cho mỗi Episode
+delta_time: 0.1          # Thời gian mỗi bước mô phỏng (giây)
+max_velocity: 0.1        # Vận tốc tối đa của hạt (m/s)
+target_radius: 0.001     # Bán kính mục tiêu để tính Reward
+particle_radius: 0.001   # Bán kính thực tế của hạt (1mm)
+
+Giới hạn không gian an toàn (Bounding box của bán cầu)
+
+bounds:
+x_min: -0.06
+x_max: 0.06
+y_min: -0.06
+y_max: 0.06
+z_min: 0.00        # Z thấp nhất (đáy bát)
+z_max: 0.12        # Z cao nhất (miệng bát)
+
+=========================================================
+
+CẤU HÌNH VẬT LÝ & SÓNG ÂM (Acoustic Physics & APF)
+
+=========================================================
+
+physics:
+acoustics:
+wavelength: 0.00865    # Bước sóng siêu âm 40kHz trong không khí (m)
+transducer_radius: 0.005 # Bán kính màng rung (Murata 10mm)
+speed_of_sound_0: 343  # Tốc độ âm thanh trong không khí (m/s)
+density_0: 1.2         # Khối lượng riêng không khí (kg/m3)
+particle_density: 1052 # Khối lượng riêng của hạt xốp/nhựa (kg/m3)
+particle_speed: 1150   # Tốc độ âm thanh truyền trong hạt (m/s)
+
+apf:
+# Bán kính elip dùng để tính va chạm (Tránh các hạt phá bẫy âm của nhau)
+threshold_x: 0.015
+threshold_y: 0.015
+threshold_z: 0.031
+repulsion_gain: 1e-5   # Hệ số lực đẩy của Artificial Potential Field
+
+=========================================================
+
+CẤU HÌNH PHẦN CỨNG (Hardware setup)
+
+=========================================================
+
+hardware:
+num_transducers: 79
+setup_type: "hemisphere"
+
+Để tránh hard-code 79 tọa độ vào file này làm file quá dài,
+
+ta sẽ đọc tọa độ và vector pháp tuyến trực tiếp từ file XML của MuJoCo.
+
+geometry_file: "acoustic_env/assets/mujoco_levitator.xml"
+
+=========================================================
+
+CẤU HÌNH HỌC TĂNG CƯỜNG (RL Algorithm - TD3/MADDPG)
+
+=========================================================
+
+rl_algorithm:
+algo_name: "TD3"
+replay_buffer_capacity: 1000000
+minimal_train_size: 5000 # Số lượng mẫu tối thiểu để bắt đầu update weights
+batch_size: 256
+actor_lr: 0.001
+critic_lr: 0.001
+gamma: 0.99
+tau: 0.005
