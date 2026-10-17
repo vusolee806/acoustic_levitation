@@ -4,24 +4,20 @@ import numpy as np
 import mujoco
 import mujoco.viewer
 import matplotlib.pyplot as plt
+import torch
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 
-import levitate
-from scripts.plot_utils import plot_simulation_results
+from scripts.OldCode.plot_utils import plot_simulation_results
 import HemisAcoustic.assets.constants as const
-# # ==========================================
-# # 1. ACOUSTIC & MATERIAL CONSTANTS
-# # ==========================================
-# FREQ = 40000.0         # Operating frequency (Hz)
-# C_0 = 343.0            # Speed of sound in air (m/s)
-# RHO_0 = 1.225          # Density of air (kg/m^3)
-# WAVELENGTH = C_0 / FREQ 
 
-# C_1 = 1200.0           # Speed of sound in EPS foam (m/s)
-# RHO_1 = 40.0           # Density of EPS foam (kg/m^3)
-# PARTICLE_RADIUS = 0.003 # 2mm
+# === AcousTools Imports ===
+from acoustools.Utilities import create_points, device, DTYPE, propagate_abs, add_lev_sig
+from acoustools.Solvers import naive
+from acoustools.Force import compute_force
+from acoustools.Visualiser import Visualise, ABC
+import acoustools.Constants as c
 
 def main():
     xml_path = os.path.join(PROJECT_ROOT, "assets", "mujoco_levitator.xml")
@@ -33,8 +29,6 @@ def main():
         return
 
     data = mujoco.MjData(model)
-
-    # Initialize global coordinates before reading them
     mujoco.mj_kinematics(model, data)
 
     num_transducers = 79
@@ -44,7 +38,7 @@ def main():
     for i in range(num_transducers):
         site_id = model.site(f"site_sensor_{i+1}").id
         
-        # 1. Use GLOBAL position from data, not local from model
+        # 1. Use GLOBAL position from data
         transducer_positions[i] = data.site_xpos[site_id]
 
         # 2. Use GLOBAL rotation matrix from data
@@ -54,67 +48,55 @@ def main():
     ball_id = model.body("test_ball").id
 
     # ==========================================
-    # 2. SETUP LEVITATE ARRAY AND MATERIALS
+    # 2. SETUP ACOUSTOOLS TENSORS
     # ==========================================
-    levitate.frequency = const.FREQ
-    ball_material = levitate.materials.Material(rho=const.RHO_1, c=const.C_1)
     
-    array = levitate.arrays.NormalTransducerArray(
-        positions=transducer_positions.T, 
-        normals=transducer_zaxis.T,
-        transducer_size=const.TRANSDUCER_SIZE  
-    )
+    # Convert numpy arrays to PyTorch tensors and explicitly cast to AcousTools' DTYPE (complex64)
+    board_pos = torch.tensor(transducer_positions, device=device).to(DTYPE)
+    board_norms = torch.tensor(transducer_zaxis, device=device).to(DTYPE)
     
-    force_evaluator = levitate.fields.RadiationForce(
-        array, radius=const.PARTICLE_RADIUS, material=ball_material
-    )
-    # --- LƯU TRỮ DỮ LIỆU ---
+    # Map physical constants (fallback to AcousTools defaults if not in const)
+    radius = getattr(const, 'TRANSDUCER_SIZE', c.radius)
+    rho_1 = getattr(const, 'RHO_1', c.p_p)
+    c_1 = getattr(const, 'C_1', c.c_p)
+    particle_vol = (4/3) * np.pi * (getattr(const, 'PARTICLE_RADIUS', c.R))**3
+
+    target_focal_point = [0.0, 0.0, 0.04]
+    
+    # AcousTools points require shape [Batch, 3, N]. create_points builds this natively.
+    p = create_points(N=1, B=1, x=target_focal_point[0], y=target_focal_point[1], z=target_focal_point[2])
+
+    # 1. Compute focal phases using the naive backpropagation solver
+    hologram = naive(p, board=board_pos, norms=board_norms, transducer_radius=radius)
+    
+    # 2. Add the Twin Trap phase signature (Explicitly pass board_size for custom arrays)
+    hologram = add_lev_sig(hologram, board=board_pos, mode='Twin', board_size=num_transducers)
+
+    # 3. Apply the amplitude weight
+    complex_weights = 0.4 * hologram
+
+    # ==========================================
+    # 3. VISUALIZATION
+    # ==========================================
+    print("Rendering Acoustic Field...")
+    
+    # Define a 4cm XZ viewing plane centered on the trap
+    A, B, C = ABC(size=0.04, plane='xz', origin=target_focal_point)
+    
+    # Render non-blockingly so MuJoCo can launch
+    Visualise(A, B, C, complex_weights, 
+              colour_functions=[propagate_abs],
+              colour_function_args=[{'board': board_pos, 'norms': board_norms, 'transducer_radius': radius}],
+              res=(150, 150), show=True, block=False, 
+              titles=['Twin Trap Pressure (XZ Plane)'])
+
+    # --- LOGGING SETUP ---
     time_log = []
     fx_log, fy_log, fz_log = [], [], []
-    x_pos_log, y_pos_log, z_pos_log = [], [], []  # Added X and Y
+    x_pos_log, y_pos_log, z_pos_log = [], [], []
 
     print("Đang chạy mô phỏng... Tắt cửa sổ MuJoCo để xem đồ thị!")
 
-    # Apply the frequency directly to the array
-    array.freq = const.FREQ
-
-    # Define the target
-    target_focal_point = np.array([0.0, 0.0, 0.03])
-
-    # 1. Use Levitate to get focus phases
-    focus_phases = array.focus_phases(target_focal_point)
-
-    # 2. Use Levitate to apply the Twin Trap signature 
-    twin_signature = array.signature(position=target_focal_point, stype='twin')
-
-    # 3. Combine and calculate complex weights exactly ONCE
-    array.phases = focus_phases + twin_signature
-    complex_weights = 0.4 * np.exp(1j * array.phases)
-
-    #visulize by library levitate
-    # Create a visualizer tied to your array
-    viz = array.visualize
-
-    # 1. XZ Plane (Front View) - Normal points along Y
-    viz.append(levitate.visualizers.PressureSlice(
-        array, normal=(0, 1, 0), intersect=target_focal_point
-    ))
-
-    # 2. YZ Plane (Side View) - Normal points along X
-    viz.append(levitate.visualizers.PressureSlice(
-        array, normal=(1, 0, 0), intersect=target_focal_point
-    ))
-
-    # 3. XY Plane (Top-Down View) - Normal points along Z
-    viz.append(levitate.visualizers.PressureSlice(
-        array, normal=(0, 0, 1), intersect=target_focal_point
-    ))
-
-    # Render the interactive Plotly graph using your complex weights
-    fig = viz(complex_weights)
-    fig.show()
-
-    # Set how often to update the screen (e.g., every 15 physics steps)
     render_interval = 15  
     step_counter = 0
 
@@ -123,19 +105,33 @@ def main():
             step_counter += 1
             
             # ==========================================
-            # 1. EVERY STEP: PHYSICS & LOGGING 
-            # (This must run as fast as possible)
+            # 4. EVERY STEP: PHYSICS & LOGGING 
             # ==========================================
             data.qfrc_applied[:] = 0.0 
             ball_pos = data.xpos[ball_id]
             
-            forces_array = force_evaluator(complex_weights, ball_pos)
-            arf_force = forces_array
+            # Convert particle position to AcousTools [1, 3, 1] tensor shape
+            ball_pos_torch = torch.tensor(ball_pos, dtype=torch.float32, device=device).unsqueeze(0).unsqueeze(2)
+            
+            # Evaluate Acoustic Radiation Force
+            forces_tensor = compute_force(
+                activations=complex_weights,
+                points=ball_pos_torch,
+                board=board_pos,
+                transducer_norms=board_norms,
+                transducer_radius=radius,
+                particle_density=rho_1,
+                particle_speed=c_1,
+                V=particle_vol
+            )
+            
+            # Extract the [Fx, Fy, Fz] force vector and format for MuJoCo
+            arf_force = forces_tensor[0, 0, :].cpu().numpy()
             
             torque = np.array([0.0, 0.0, 0.0]) 
             mujoco.mj_applyFT(model, data, arf_force, torque, ball_pos, ball_id, data.qfrc_applied)
             
-            # Log data for your plot
+            # Log data
             time_log.append(data.time)
             fx_log.append(arf_force[0])
             fy_log.append(arf_force[1])
@@ -144,23 +140,18 @@ def main():
             y_pos_log.append(ball_pos[1])  
             z_pos_log.append(ball_pos[2])
 
-            # Advance the physics engine
             mujoco.mj_step(model, data)
             
             # ==========================================
-            # 2. EVERY N STEPS: VISUALIZATION
+            # 5. EVERY N STEPS: VISUALIZATION
             # ==========================================
             if step_counter % render_interval == 0:
                 visual_scale = 1000.0  
                 force_end = ball_pos + (arf_force * visual_scale)
                 
-                # # The exact center of the acoustic trap
-                # target_focal_point = np.array([0.0, 0.0, 0.04])
-                
                 with viewer.lock():
                     viewer.user_scn.ngeom = num_transducers + 1
                     
-                    # --- A. Draw the 79 blue rays pointing to the TRAP ---
                     for i in range(num_transducers):
                         mujoco.mjv_initGeom(
                             viewer.user_scn.geoms[i],
@@ -175,10 +166,9 @@ def main():
                             mujoco.mjtGeom.mjGEOM_LINE, 
                             0.0005, 
                             transducer_positions[i],
-                            target_focal_point   # Correctly mapped to the trap
+                            target_focal_point   
                         )
                     
-                    # --- B. Draw the 1 red force vector pushing the BALL ---
                     mujoco.mjv_initGeom(
                         viewer.user_scn.geoms[num_transducers],
                         type=mujoco.mjtGeom.mjGEOM_CAPSULE,
@@ -191,15 +181,14 @@ def main():
                         viewer.user_scn.geoms[num_transducers], 
                         mujoco.mjtGeom.mjGEOM_CAPSULE, 
                         0.001,  
-                        ball_pos,      # Correctly mapped to start at the ball
-                        force_end      # Correctly mapped to end at the scaled force
+                        ball_pos,      
+                        force_end      
                     )
                 
-                # Sync the viewer ONLY when we redraw the shapes
                 viewer.sync()
 
     # ==========================================
-    # 3. VẼ ĐỒ THỊ
+    # 6. PLOT RESULTS
     # ==========================================
     print("Đã tắt mô phỏng. Đang tạo đồ thị...")
     
