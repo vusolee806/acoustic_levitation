@@ -5,7 +5,7 @@ TỔNG QUAN THÍ NGHIỆM (Experiment Tracking - W&B)
 =========================================================
 
 experiment:
-project_name: "acoustic-levitation-hemisphere"
+project_name: "HemisAcoustic"
 run_name: "hemisphere_test_01"
 seed: 42
 total_timesteps: 500000  # Tổng số bước train (step)

@@ -1,6 +1,10 @@
 README.md
 setup.py
+HemisAcoustic/__init__.py
 HemisAcoustic.egg-info/PKG-INFO
 HemisAcoustic.egg-info/SOURCES.txt
 HemisAcoustic.egg-info/dependency_links.txt
 HemisAcoustic.egg-info/top_level.txt
+HemisAcoustic/particles/__init__.py
+HemisAcoustic/particles/particle_slim.py
+HemisAcoustic/particles/target_slim.py

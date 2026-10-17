@@ -1,0 +1,15 @@
+# configs/train_single.yaml
+
+env:
+  radius: 0.04           # Bán kính không gian an toàn (4cm)
+  z_radius: 0.015        # Giới hạn trục Z (1.5cm) -> Tránh chui xuống đáy bát
+  z_center: 0.0         # Tiêu điểm Z của bát bán cầu
+  max_velocity: 0.1      # Vận tốc tối đa (m/s)
+  delta_time: 0.1        # Thời gian mỗi bước (100ms)
+  max_steps: 100         # Số bước tối đa cho 1 episode (tránh hạt bay mãi không dừng)
+  target_radius: 0.001   # Sai số chấp nhận khi tới đích (1mm)
+
+train:
+  algo: "PPO"
+  total_timesteps: 50000 # Số bước huấn luyện
+  save_path: "logs/checkpoints/ppo_single_particle"
