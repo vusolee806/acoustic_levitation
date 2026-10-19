@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from stable_baselines3 import PPO
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
-# Import môi trường của bạn
 from HemisAcoustic.envs.train_env_single import TrainEnvSingle
 
 def main():
@@ -14,44 +14,63 @@ def main():
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
         
-    env = TrainEnvSingle(config)
+    # Bọc môi trường gốc vào DummyVecEnv
+    env = DummyVecEnv([lambda: TrainEnvSingle(config)])
     
-    print("=== 2. TẢI MÔ HÌNH ĐÃ HUẤN LUYỆN ===")
-    model_path = config['train']['save_path'] + ".zip"
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Không tìm thấy model tại {model_path}. Bạn đã train xong chưa?")
-        
-    # Tải lại bộ não
-    model = PPO.load(model_path)
+    print("=== 2. TẢI MÔ HÌNH VÀ BỘ CHUẨN HÓA ===")
+    # ĐIỀN ĐÚNG VERSION (Ví dụ: _v4)
+    model_version_path = config['train']['save_path'] + "_v7" 
+    
+    # Thêm device="cpu" để tắt cảnh báo màu vàng của GPU
+    model = PPO.load(model_version_path + ".zip", device="cpu")
+    
+    # Tải lại bộ chuẩn hóa (Kính râm của AI)
+    env = VecNormalize.load(model_version_path + "_vecnormalize.pkl", env)
+    
+    # Tắt chế độ train và không chuẩn hóa reward lúc test
+    env.training = False
+    env.norm_reward = False
     
     print("=== 3. CHẠY MÔ PHỎNG ===")
-    obs, info = env.reset()
+    obs = env.reset() # VecEnv reset chỉ trả về obs, không có info
     
-    # Lưu trữ tọa độ để vẽ hình
+    # -------------------------------------------------------------
+    # BƯỚC QUAN TRỌNG: Xuyên qua lớp vỏ VecNormalize và DummyVecEnv 
+    # để lấy môi trường TrainEnvSingle gốc
+    base_env = env.venv.envs[0]
+    # -------------------------------------------------------------
+    
     trajectory = []
-    target_pos = [env.target.x, env.target.y, env.target.z]
     
-    # Lưu tọa độ ban đầu
-    trajectory.append([env.particle.x, env.particle.y, env.particle.z])
+    # Lấy tọa độ từ base_env
+    target_pos = [base_env.target.x, base_env.target.y, base_env.target.z]
+    trajectory.append([base_env.particle.x, base_env.particle.y, base_env.particle.z])
     
-    terminated = False
-    truncated = False
     step = 0
     
-    while not (terminated or truncated):
-        # Yêu cầu RL đưa ra quyết định (deterministic=True để model lấy hành động tốt nhất, không ngẫu nhiên)
+    while True:
+        # RL đưa ra quyết định
         action, _states = model.predict(obs, deterministic=True)
         
-        # Môi trường thực thi hành động
-        obs, reward, terminated, truncated, info = env.step(action)
-        
+        # Môi trường thực thi. VecEnv trả về 4 biến (done gộp chung cả terminated và truncated)
+        obs, reward, done, info = env.step(action)
+        if done[0]:
+            trajectory.append(info[0]["particle_pos"])
+            break
+        else:
+            trajectory.append([base_env.particle.x, base_env.particle.y, base_env.particle.z])
         # Ghi nhận tọa độ mới
-        trajectory.append([env.particle.x, env.particle.y, env.particle.z])
+        trajectory.append([base_env.particle.x, base_env.particle.y, base_env.particle.z])
         step += 1
         
+        # Nếu VecEnv báo done[0] == True thì dừng
+        if done[0]:
+            break
+            
     trajectory = np.array(trajectory)
     
-    if terminated and np.linalg.norm(trajectory[-1] - target_pos) <= config['env']['target_radius']:
+    # Kiểm tra xem điểm cuối cùng của quỹ đạo có nằm trong bán kính đích không
+    if np.linalg.norm(trajectory[-1] - target_pos) <= config['env']['target_radius']:
         print(f"✅ THÀNH CÔNG! Hạt đã đến đích sau {step} bước.")
     else:
         print(f"❌ THẤT BẠI! Hạt đã rơi khỏi bán cầu hoặc hết thời gian ({step} bước).")
@@ -62,11 +81,10 @@ def main():
     
     # Vẽ không gian an toàn (Bát bán cầu giới hạn)
     u = np.linspace(0, 2 * np.pi, 50)
-    v = np.linspace(0, np.pi / 2, 50) # Chỉ vẽ nửa dưới/bán cầu
+    v = np.linspace(0, np.pi / 2, 50)
     x_sphere = config['env']['radius'] * np.outer(np.cos(u), np.sin(v))
     y_sphere = config['env']['radius'] * np.outer(np.sin(u), np.sin(v))
     z_sphere = config['env']['radius'] * np.outer(np.ones(np.size(u)), np.cos(v)) + config['env']['z_center']
-    # Lật ngược bán cầu để giống cái bát
     z_sphere = config['env']['z_center'] - (z_sphere - config['env']['z_center'])
     ax.plot_wireframe(x_sphere, y_sphere, z_sphere, color='gray', alpha=0.1)
 
@@ -80,7 +98,6 @@ def main():
     # Vẽ điểm đích (Màu đỏ)
     ax.scatter(*target_pos, color='red', s=100, label='Đích đến (Target)', zorder=5)
     
-    # Thiết lập góc nhìn và nhãn
     ax.set_title("Mô phỏng Quỹ đạo bay của hạt (PPO)")
     ax.set_xlabel("X (m)")
     ax.set_ylabel("Y (m)")
