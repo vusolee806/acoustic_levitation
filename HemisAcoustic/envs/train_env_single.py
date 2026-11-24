@@ -111,7 +111,7 @@ class TrainEnvSingle(gym.Env):
         
         # Thưởng tới đích
         elif current_dist <= self.cfg['target_radius']:
-            reward += 100.0 # Thưởng siêu khổng lồ
+            reward += 100.0 # Thưởng lớn
             terminated = True
             
         # Kiểm tra hết giờ (Max steps)

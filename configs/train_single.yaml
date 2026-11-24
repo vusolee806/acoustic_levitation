@@ -11,5 +11,5 @@ env:
 
 train:
   algo: "PPO"
-  total_timesteps: 500000 # Số bước huấn luyện
+  total_timesteps: 800000 # Số bước huấn luyện
   save_path: "logs/checkpoints/ppo_single_particle"

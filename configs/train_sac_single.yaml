@@ -1,0 +1,32 @@
+# configs/train_sac_single.yaml
+
+env:
+  radius: 0.03           # 30 mm (matches train_single.yaml)
+  z_radius: 0.015        # 15 mm
+  z_center: 0.0
+  max_velocity: 0.05     # 0.05 m/s (50 mm/s)
+  delta_time: 0.02       # 20 ms -> max step = 1 mm/step
+  max_steps: 200
+  target_radius: 0.001   # 1 mm
+
+train:
+  algo: "SAC"
+  total_timesteps: 150000  # Off-policy SAC needs far fewer steps than PPO's 800,000
+  save_path: "logs/checkpoints/sac_single_particle"
+  model_version: "_v1"
+
+  # SAC Hyperparameters
+  learning_rate: 0.0003
+  buffer_size: 200000
+  learning_starts: 5000
+  batch_size: 256
+  tau: 0.005
+  gamma: 0.99
+  train_freq: 1
+  gradient_steps: 1
+  ent_coef: "auto"
+  net_arch: [256, 256]
+
+  # Evaluation & Checkpointing
+  eval_freq: 10000
+  n_eval_episodes: 30

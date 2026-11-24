@@ -19,7 +19,7 @@ def main():
     
     print("=== 2. TẢI MÔ HÌNH VÀ BỘ CHUẨN HÓA ===")
     # ĐIỀN ĐÚNG VERSION (Ví dụ: _v4)
-    model_version_path = config['train']['save_path'] + "_v7" 
+    model_version_path = config['train']['save_path'] + "_v8"
     
     # Thêm device="cpu" để tắt cảnh báo màu vàng của GPU
     model = PPO.load(model_version_path + ".zip", device="cpu")
