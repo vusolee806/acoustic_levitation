@@ -1,0 +1,32 @@
+# configs/train_ddpg_single.yaml
+
+env:
+  radius: 0.03           # 30 mm (matches PPO & SAC configs)
+  z_radius: 0.015        # 15 mm
+  z_center: 0.0
+  max_velocity: 0.02     # 0.02 m/s (20 mm/s)
+  delta_time: 0.02       # 20 ms -> max step = 1 mm/step
+  max_steps: 200
+  target_radius: 0.001   # 1 mm
+
+train:
+  algo: "DDPG"
+  total_timesteps: 200000
+  save_path: "logs/checkpoints/ddpg_single_particle"
+  model_version: "_v2"
+
+  # DDPG Hyperparameters (matched to DDPG.py & tuned for HemisAcoustic)
+  learning_rate: 0.0003
+  buffer_size: 100000
+  learning_starts: 2000
+  batch_size: 256
+  tau: 0.005
+  gamma: 0.98
+  train_freq: 1
+  gradient_steps: 1
+  exploration_noise: 0.1  # sigma for Gaussian action noise in [-1, 1]
+  net_arch: [256, 256]
+
+  # Evaluation & Checkpointing
+  eval_freq: 10000
+  n_eval_episodes: 30

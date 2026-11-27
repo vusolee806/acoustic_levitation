@@ -9,44 +9,55 @@ import mujoco
 import mujoco.viewer
 from scipy.interpolate import interp1d
 from stable_baselines3 import SAC
-from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 from HemisAcoustic.envs.train_env_single import TrainEnvSingle
+from HemisAcoustic.envs.sac_wrapper import SACAcousticWrapper
 from HemisAcoustic.physics.acoustic_force_hemi import HemisphereAcousticSolver
 
 
-def generate_sac_trajectory(config, model_version="_sac_v1", custom_target=None):
-    """Roll out the trained SB3 SAC model to generate 3D waypoints."""
-    env = DummyVecEnv([lambda: TrainEnvSingle(config)])
+def generate_sac_trajectory(config, model_version="_v2", custom_target=None):
+    """Roll out the trained SB3 SAC model using SACAcousticWrapper."""
+    base_env = TrainEnvSingle(config)
+    env = SACAcousticWrapper(base_env, train_reward_shaping=False)
+
     model_path = config["train"]["save_path"] + model_version
-
+    print(f"Loading SAC model: {model_path}.zip")
     model = SAC.load(model_path + ".zip", device="cpu")
-    env = VecNormalize.load(model_path + "_vecnormalize.pkl", env)
-    env.training = False
-    env.norm_reward = False
 
-    obs = env.reset()
-    base_env = env.venv.envs[0]
+    obs, _ = env.reset()
 
     # Override random target with user-specified target if provided
     if custom_target is not None:
+        cx = float(custom_target[0])
+        cy = float(custom_target[1])
+        cz = float(custom_target[2]) - config["env"]["z_center"]
+        ellipsoid_val = (
+            (cx ** 2 / config["env"]["radius"] ** 2)
+            + (cy ** 2 / config["env"]["radius"] ** 2)
+            + (cz ** 2 / config["env"]["z_radius"] ** 2)
+        )
+        if ellipsoid_val >= 1.0:
+            print(
+                f"[WARNING] CUSTOM_TARGET {custom_target} is OUTSIDE workspace "
+                f"(ellipsoid={ellipsoid_val:.3f} >= 1.0)!"
+            )
+
         base_env.target.x = float(custom_target[0])
         base_env.target.y = float(custom_target[1])
         base_env.target.z = float(custom_target[2])
         base_env.particle.last_timestep_dist = np.linalg.norm(
             np.array([base_env.particle.x, base_env.particle.y, base_env.particle.z]) - np.array(custom_target)
         )
-        raw_obs = base_env._get_obs()
-        obs = env.normalize_obs(np.array([raw_obs]))
+        obs = env._scale_obs(base_env._get_obs())
 
     target_pos = np.array([base_env.target.x, base_env.target.y, base_env.target.z])
     waypoints = [np.array([base_env.particle.x, base_env.particle.y, base_env.particle.z])]
 
     while True:
         action, _ = model.predict(obs, deterministic=True)
-        obs, reward, done, info = env.step(action)
-        if done[0]:
-            waypoints.append(info[0]["particle_pos"])
+        obs, reward, terminated, truncated, info = env.step(action)
+        if terminated or truncated:
+            waypoints.append(info["particle_pos"])
             break
         else:
             waypoints.append(np.array([base_env.particle.x, base_env.particle.y, base_env.particle.z]))
@@ -54,7 +65,7 @@ def generate_sac_trajectory(config, model_version="_sac_v1", custom_target=None)
     return np.array(waypoints), target_pos
 
 
-def smooth_and_interpolate_path(waypoints, dt_rl=0.1, dt_sim=0.005):
+def smooth_and_interpolate_path(waypoints, dt_rl=0.02, dt_sim=0.005):
     """Upsample coarse SAC waypoints to fine acoustic trap control steps."""
     diffs = np.linalg.norm(np.diff(waypoints, axis=0), axis=1)
     valid_mask = np.insert(diffs > 1e-6, 0, True)
@@ -91,7 +102,6 @@ def plot_comparison(waypoints, fine_trap_path, actual_ball_path, target_pos):
     """Plot 3D trajectory comparison and tracking error over time."""
     fig = plt.figure(figsize=(14, 6))
 
-    # Subplot 1: 3D Trajectory Comparison
     ax1 = fig.add_subplot(121, projection="3d")
     ax1.plot(
         waypoints[:, 0] * 1000, waypoints[:, 1] * 1000, waypoints[:, 2] * 1000,
@@ -110,7 +120,6 @@ def plot_comparison(waypoints, fine_trap_path, actual_ball_path, target_pos):
     ax1.set_zlabel("Z (mm)")
     ax1.legend()
 
-    # Subplot 2: Position Tracking Error (mm)
     ax2 = fig.add_subplot(122)
     min_len = min(len(fine_trap_path), len(actual_ball_path))
     errors_mm = np.linalg.norm(fine_trap_path[:min_len] - actual_ball_path[:min_len], axis=1) * 1000.0
@@ -132,10 +141,9 @@ def main():
     # =========================================================================
     # USER SETTINGS
     # Set CUSTOM_TARGET = None for a random target, or [x, y, z] in meters.
-    # Workspace limits: X, Y in [-0.04, 0.04], Z in [-0.015, 0.015]
+    # Valid interior ellipsoid: (x/0.03)^2 + (y/0.03)^2 + (z/0.015)^2 < 1.0
     # =========================================================================
-    CUSTOM_TARGET = [0.025, -0.015, 0.005]  # X=+25mm, Y=-15mm, Z=+5mm
-    MODEL_VERSION = "_v1"
+    CUSTOM_TARGET = [0.018, -0.052, 0.009]  # Ellipsoid = 0.631 <= 1.0 (Valid)
     PLAYBACK_DELAY = 0.015
 
     print("=== 1. GENERATE PATH FROM SB3 SAC MODEL ===")
@@ -143,8 +151,10 @@ def main():
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
+    model_version = config["train"].get("model_version", "_v2")
+
     waypoints, target_pos = generate_sac_trajectory(
-        config, model_version=MODEL_VERSION, custom_target=CUSTOM_TARGET
+        config, model_version=model_version, custom_target=CUSTOM_TARGET
     )
     print(f"SAC generated {len(waypoints)} waypoints.")
     print(f"Start: {waypoints[0].round(4)} m -> Target: {target_pos.round(4)} m")
@@ -181,7 +191,7 @@ def main():
     hold_start_steps = 100
     hold_end_steps = 150
     total_steps = hold_start_steps + len(fine_trap_path) + hold_end_steps
-    substeps_per_trap_update = 10  # 10 * 0.0001s = 1ms physics per control step
+    substeps_per_trap_update = 10
 
     with mujoco.viewer.launch_passive(mj_model, mj_data) as viewer:
         viewer.cam.lookat[:] = [0.0, 0.0, -0.01]

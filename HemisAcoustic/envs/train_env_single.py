@@ -89,7 +89,7 @@ class TrainEnvSingle(gym.Env):
         truncated = False
         
         # Thưởng tịnh tiến (Chỉ thưởng khi tiến lại gần)
-        progress_reward = (self.particle.last_timestep_dist - current_dist) * 100.0 
+        progress_reward = (self.particle.last_timestep_dist - current_dist) * 150.0 
         # Phạt thời gian cực nhỏ để ép không được đứng im
         time_penalty = -0.01 
         # Phạt nhẹ nếu dùng vận tốc lớn giúp quỹ đạo mượt hơn

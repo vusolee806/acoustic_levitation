@@ -1,3 +1,14 @@
+# configs/train_sac_single.yaml
+
+env:
+  radius: 0.03           # 30 mm
+  z_radius: 0.015        # 15 mm
+  z_center: 0.0
+  max_velocity: 0.05     # 0.05 m/s (50 mm/s)
+  delta_time: 0.02       # 20 ms -> max step = 1 mm/step
+  max_steps: 200
+  target_radius: 0.001   # 1 mm
+
 train:
   algo: "SAC"
   total_timesteps: 150000
@@ -5,14 +16,14 @@ train:
   model_version: "_v2"
 
   learning_rate: 0.0003
-  buffer_size: 100000      # Flushes early random exploration before 150k steps
-  learning_starts: 2000    # Start learning sooner with fewer random crash transitions
+  buffer_size: 100000
+  learning_starts: 2000
   batch_size: 256
   tau: 0.005
-  gamma: 0.98              # Slightly shorter horizon -> sharper, decisive pathing
+  gamma: 0.98
   train_freq: 1
   gradient_steps: 1
-  ent_coef: "auto_0.1"     # Initial alpha=0.1 instead of 1.0 (prevents entropy domination)
+  ent_coef: "auto_0.1"
   net_arch: [256, 256]
 
   eval_freq: 10000

@@ -1,73 +1,77 @@
-# Acoustic Levitation Project
+# HemisAcoustic
 
-MuJoCo simulation of a 79-transducer bowl-shaped acoustic levitator with
-direct physics integration via the external `levitate` library.
+Reinforcement-learning path planning for a particle in a hemispherical acoustic
+levitator (79 ultrasonic transducers, 40 kHz), with a MuJoCo replay that moves an
+acoustic trap along the planned path.
 
-## Overview
+## How it works
 
-A single EPS-foam ball (density 40 kg/m³, radius 2 mm) is levitated and
-steered using a 40 kHz ultrasonic transducer array arranged in a bowl
-geometry. Acoustic radiation force (ARF) is computed using the
-`levitate` library and applied to the ball in MuJoCo via
-`qfrc_applied`.
+1. An RL agent (SAC, DDPG or PPO) controls one particle in a kinematic environment
+   (`TrainEnvSingle`). The action is a 3D velocity. The particle starts at the
+   workspace center and must reach a random target inside an ellipsoid
+   (30 mm radius in x and y, 15 mm in z).
+2. The trained policy produces a path of waypoints.
+3. The `simulate_mujoco_*` scripts interpolate the path and move a Gor'kov-potential
+   trap along it in MuJoCo. A foam ball is pulled by the radiation force, and the
+   script plots how closely the ball follows the plan.
 
-## Repository layout
+The RL environment contains no acoustic forces. Only the MuJoCo replay checks
+whether the ball can follow the path.
 
-```
-acoustic_levitation_project/
-├── README.md
-├── PROJECT_CONTEXT.md     # Living reference for architecture & decisions
-├── requirements.txt
-├── setup.py
-├── assets/
-│   ├── mujoco_levitator.xml    # MAIN xml — bowl + 79 sites + test_ball
-│   └── mujoco_array.xml        # older xml (not used)
-├── configs/default_config.yaml
-├── scripts/
-│   ├── twintrap_gemini_levitate.py  # PRIMARY — twin-trap with levitate library
-│   ├── twin_trap_pytorch.py         # Legacy PyTorch backend control loop
-│   ├── twin_trap.py                 # Legacy NumPy backend control loop
-│   └── issac_acoustic.py            # Isaac Sim variant
-├── src/
-│   ├── acoustic_physics.py             # NumPy pressure / Gor'kov / ARF
-│   ├── acoustic_physics_pytorch.py     # PyTorch version + get_physics_outputs
-│   └── utils.py                        # get_asset_path()
-├── examples/
-│   ├── heatmap.py
-│   ├── test_physics_pytorch.py
-│   └── test_sound_wave.py
-└── logs/                                # plots, simulation outputs
+## Setup
+
+```powershell
+pip install -e .
 ```
 
-## Quick start
+There is no `requirements.txt`. The code imports `mujoco`, `torch`,
+`stable-baselines3`, `gymnasium`, `numpy`, `scipy`, `pyyaml` and `matplotlib`.
+Install these yourself.
 
-```bash
-# Primary simulation: twin-trap with levitate library
-python scripts/twintrap_gemini_levitate.py
-# → Interactive Plotly 3D pressure field visualization
-# → Matplotlib plots of force components and ball trajectory
+## Usage
 
-# Legacy backends
-python scripts/twin_trap_pytorch.py
-python scripts/twin_trap.py
+Run from the project root. Each algorithm has a train, evaluate and simulate script.
 
-# Isaac Sim variant
-python scripts/issac_acoustic.py
+```powershell
+# SAC (main)
+python scripts/train_sac.py
+python scripts/evaluate_sac.py
+python scripts/simulate_mujoco_sac.py
+
+# DDPG
+python scripts/train_ddpg.py
+python scripts/evaluate_ddpg.py
+python scripts/simulate_mujoco_ddpg.py
+
+# PPO (baseline)
+python scripts/train_single.py
+python scripts/evaluate_single.py
+python scripts/simulate_mujoco_ppo.py
 ```
 
-## Physics summary
+Hyperparameters and workspace size are set in `configs/train_sac_single.yaml`,
+`configs/train_ddpg_single.yaml` and `configs/train_single.yaml`. Models are saved
+to `logs/checkpoints/`, which is git-ignored.
 
-- **Transducer array**: 79 pistons at 40 kHz, 20 mm diameter
-- **Particle material**: EPS foam (ρ = 40 kg/m³, c = 1200 m/s)
-- **Twin-trap**: focus phases + vortex signature from levitate library
-- **Force application**: ARF clipped to ±1 N, written to `qfrc_applied`
+`simulate_mujoco_*.py` opens a MuJoCo viewer and a matplotlib window. To pick the
+target, edit `CUSTOM_TARGET` (meters) inside `main()`, or set it to `None` for a
+random one.
 
-## Dependencies
+## Layout
 
-- `mujoco==3.9.0` — Physics simulation
-- `levitate` — Acoustic field computation and visualization
-- `torch==2.12.0` — Legacy PyTorch backend
-- `numpy`, `matplotlib`, `plotly`
+```
+HemisAcoustic/
+  assets/      MuJoCo XML, bowl meshes, physical constants
+  envs/        TrainEnvSingle, SACAcousticWrapper
+  particles/   Particle and Target state classes
+  physics/     HemisphereAcousticSolver (phases, Gor'kov potential, force)
+  utils/       point sampling, noise models (not yet used by any script)
+configs/       one YAML per algorithm
+scripts/       train / evaluate / simulate scripts; OldCode/ is legacy
+logs/          checkpoints, tensorboard, plots (git-ignored)
+```
 
-See `PROJECT_CONTEXT.md` for full architecture documentation,
-gotchas, and out-of-scope items.
+## More detail
+
+`PROJECT_CONTEXT.md` has the full description: observation and reward definitions,
+config comparison, conventions for editing, and known issues.

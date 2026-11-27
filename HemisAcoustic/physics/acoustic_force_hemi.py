@@ -24,17 +24,18 @@ class HemisphereAcousticSolver:
         self.k1 = (vol / 4.0) * (1.0 / (rho0 * c0**2) - 1.0 / (rho_p * c_p**2))
         self.k2 = (3.0 * vol / 4.0) * (rho0 - rho_p) / ((self.w**2) * rho0 * (2.0 * rho_p + rho0))
 
-        # Extract 79 transducer positions and normal vectors (zaxis) from MuJoCo XML
+        # [FIX 1 - CRITICAL] Extract 79 transducer positions and normals from site_sensor_i
+        # (mujoco_levitator.xml defines zaxis on <site>/<geom>, not on <body>)
+        tmp_data = mujoco.MjData(mj_model)
+        mujoco.mj_forward(mj_model, tmp_data)
+
         trans_pos = []
         trans_norm = []
         for i in range(1, 80):
-            body_id = mujoco.mj_name2id(mj_model, mujoco.mjtObj.mjOBJ_BODY, f"sensor_{i}")
-            pos = mj_model.body_pos[body_id]
-            quat = mj_model.body_quat[body_id]
-            mat = np.zeros(9)
-            mujoco.mju_quat2Mat(mat, quat)
-            zaxis = mat.reshape(3, 3)[:, 2]  # Local Z-axis is the emission direction
-            
+            site_id = mujoco.mj_name2id(mj_model, mujoco.mjtObj.mjOBJ_SITE, f"site_sensor_{i}")
+            pos = tmp_data.site_xpos[site_id].copy()
+            zaxis = tmp_data.site_xmat[site_id].reshape(3, 3)[:, 2].copy()  # Local Z-axis is the emission direction
+
             trans_pos.append(pos)
             trans_norm.append(zaxis)
 
@@ -59,6 +60,9 @@ class HemisphereAcousticSolver:
         bessel_arg = self.k * self.a * sin_theta
         directivity = (0.5 - bessel_arg**2 / 16.0 + bessel_arg**4 / 384.0 
                        - bessel_arg**6 / 18432.0 + bessel_arg**8 / 1474560.0)
+
+        # [FIX 2 - SAFEGUARD] Baffled piston only radiates into the forward hemisphere (cos_theta > 0)
+        directivity = torch.where(cos_theta > 0.0, directivity, torch.zeros_like(directivity))
 
         phase = torch.exp(1j * self.k * dist)
         H = 2.0 * self.p0 * (phase / dist) * directivity
